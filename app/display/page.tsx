@@ -191,13 +191,13 @@ export default function DisplayPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-300 to-rose-300 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-rose-100 flex items-center justify-center">
         <div className="flex flex-col items-center space-y-6 animate-fade-in">
           <div className="relative">
-            <div className="h-20 w-20 rounded-full border-4 border-primary/30 border-t-primary animate-spin" />
-            <div className="absolute inset-0 h-20 w-20 rounded-full bg-primary/20 blur-2xl animate-pulse" />
+            <div className="h-20 w-20 rounded-full border-4 border-rose-500/30 border-t-rose-500 animate-spin" />
+            <div className="absolute inset-0 h-20 w-20 rounded-full bg-rose-500/20 blur-2xl animate-pulse" />
           </div>
-          <p className="text-white/80 text-xl font-medium">
+          <p className="text-neutral-700 text-xl font-medium">
             Loading display...
           </p>
         </div>
@@ -206,13 +206,13 @@ export default function DisplayPage() {
   }
 
   return (
-    <div className="h-screen w-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black overflow-hidden fixed inset-0">
+    <div className="h-screen w-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-950 overflow-hidden fixed inset-0">
       {users.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-screen text-center px-4">
           <div className="relative mb-8 animate-fade-in">
-            <div className="h-32 w-32 rounded-full bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
+            <div className="h-32 w-32 rounded-full bg-gradient-to-br from-rose-500/20 to-rose-600/20 flex items-center justify-center">
               <svg
-                className="h-16 w-16 text-primary/60"
+                className="h-16 w-16 text-rose-500/60"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -225,7 +225,7 @@ export default function DisplayPage() {
                 />
               </svg>
             </div>
-            <div className="absolute inset-0 h-32 w-32 rounded-full bg-primary/10 blur-3xl animate-pulse" />
+            <div className="absolute inset-0 h-32 w-32 rounded-full bg-rose-500/10 blur-3xl animate-pulse" />
           </div>
           <p className="text-3xl font-semibold text-white mb-3 animate-fade-in">
             No entries yet
@@ -251,15 +251,15 @@ export default function DisplayPage() {
         </div>
       )}
 
-      {/* Ambient Background Effects */}
+      {/* Ambient Background Effects - Rose Theme */}
       <div className="fixed inset-0 pointer-events-none -z-10">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-rose-500/5 rounded-full blur-3xl animate-pulse" />
         <div
-          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl animate-pulse"
+          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-rose-600/5 rounded-full blur-3xl animate-pulse"
           style={{ animationDelay: "1s", animationDuration: "4s" }}
         />
         <div
-          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-pink-500/5 rounded-full blur-3xl animate-pulse"
+          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-rose-700/5 rounded-full blur-3xl animate-pulse"
           style={{ animationDelay: "2s", animationDuration: "5s" }}
         />
       </div>

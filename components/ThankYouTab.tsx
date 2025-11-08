@@ -25,61 +25,31 @@ export default function ThankYouTab({ onBackToForm }: ThankYouTabProps) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
       className="fixed inset-0 bg-gradient-to-br from-rose-500 via-rose-600 to-rose-700 flex items-center justify-center overflow-hidden"
     >
-          {/* Animated Background Circles */}
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 2, opacity: 0.1 }}
-            transition={{ duration: 1.5, ease: "easeOut", delay: 0.1 }}
-            className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl"
-          />
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 2, opacity: 0.1 }}
-            transition={{ duration: 1.5, delay: 0.3, ease: "easeOut" }}
-            className="absolute bottom-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl"
-          />
-
           {/* Main Content Container */}
           <motion.div
-            initial={{ opacity: 0, y: 50 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
             className="relative z-10 w-full max-w-md px-6 py-8 flex flex-col items-center justify-center min-h-screen"
           >
             {/* Success Icon with Animation */}
             <motion.div
-              initial={{ scale: 0, rotate: -180, opacity: 0 }}
-              animate={{ scale: 1, rotate: 0, opacity: 1 }}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
               transition={{
                 type: "spring",
                 stiffness: 200,
                 damping: 15,
-                delay: 0.4,
+                delay: 0.2,
               }}
               className="relative mb-8"
             >
-              {/* Pulsing background circle */}
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{
-                  scale: [1, 1.2, 1],
-                  opacity: [0.5, 0.2, 0.5],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.6,
-                }}
-                className="absolute inset-0 bg-white rounded-full blur-xl"
-              />
-
               {/* Main success circle */}
               <motion.div
                 initial={{ scale: 0 }}
@@ -88,7 +58,7 @@ export default function ThankYouTab({ onBackToForm }: ThankYouTabProps) {
                   type: "spring",
                   stiffness: 250,
                   damping: 20,
-                  delay: 0.5,
+                  delay: 0.3,
                 }}
                 className="relative w-32 h-32 bg-white rounded-full flex items-center justify-center shadow-2xl"
               >
@@ -99,7 +69,7 @@ export default function ThankYouTab({ onBackToForm }: ThankYouTabProps) {
                     type: "spring",
                     stiffness: 300,
                     damping: 20,
-                    delay: 0.7,
+                    delay: 0.4,
                   }}
                 >
                   <Check className="w-16 h-16 text-rose-500" strokeWidth={3} />
@@ -120,8 +90,8 @@ export default function ThankYouTab({ onBackToForm }: ThankYouTabProps) {
                       rotate: confetti.rotation,
                     }}
                     transition={{
-                      duration: 1.8,
-                      delay: 0.8 + confetti.delay,
+                      duration: 1.5,
+                      delay: 0.5 + (confetti.id * 0.05),
                       ease: "easeOut",
                     }}
                     className="absolute top-1/2 left-1/2"
@@ -140,13 +110,13 @@ export default function ThankYouTab({ onBackToForm }: ThankYouTabProps) {
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.9, duration: 0.6, ease: "easeOut" }}
+              transition={{ delay: 0.5, duration: 0.4, ease: "easeOut" }}
               className="text-center mb-8"
             >
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.0, duration: 0.5, ease: "easeOut" }}
+                transition={{ delay: 0.6, duration: 0.3, ease: "easeOut" }}
                 className="text-4xl md:text-5xl font-extrabold text-white mb-4 tracking-tight"
               >
                 Thank You! 🎉
@@ -154,7 +124,7 @@ export default function ThankYouTab({ onBackToForm }: ThankYouTabProps) {
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.1, duration: 0.5, ease: "easeOut" }}
+                transition={{ delay: 0.7, duration: 0.3, ease: "easeOut" }}
                 className="text-lg md:text-xl text-white/90 leading-relaxed px-4"
               >
                 Your response has been recorded successfully. We appreciate your time!
@@ -165,13 +135,13 @@ export default function ThankYouTab({ onBackToForm }: ThankYouTabProps) {
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.2, duration: 0.5, ease: "easeOut" }}
+              transition={{ delay: 0.8, duration: 0.4, ease: "easeOut" }}
               className="flex flex-col gap-3 w-full px-4"
             >
               <motion.button
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 1.3, duration: 0.3 }}
+                transition={{ delay: 0.9, duration: 0.3 }}
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={onBackToForm}
@@ -183,7 +153,7 @@ export default function ThankYouTab({ onBackToForm }: ThankYouTabProps) {
               <motion.button
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 1.4, duration: 0.3 }}
+                transition={{ delay: 1.0, duration: 0.3 }}
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => router.push("/display")}
@@ -196,7 +166,7 @@ export default function ThankYouTab({ onBackToForm }: ThankYouTabProps) {
               <motion.button
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 1.5, duration: 0.3 }}
+                transition={{ delay: 1.1, duration: 0.3 }}
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => router.push("/result")}
@@ -211,7 +181,7 @@ export default function ThankYouTab({ onBackToForm }: ThankYouTabProps) {
             <motion.div
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 1.6, duration: 0.5, type: "spring", stiffness: 200 }}
+              transition={{ delay: 1.2, duration: 0.4, type: "spring", stiffness: 200 }}
               className="mt-8 text-6xl"
             >
               <motion.span
@@ -220,7 +190,7 @@ export default function ThankYouTab({ onBackToForm }: ThankYouTabProps) {
                 }}
                 transition={{
                   duration: 0.5,
-                  delay: 1.8,
+                  delay: 1.3,
                   repeat: 2,
                 }}
                 className="inline-block"

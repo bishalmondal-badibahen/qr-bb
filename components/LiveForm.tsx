@@ -4,26 +4,27 @@ import { useState, useRef, useEffect } from "react";
 import { ref, push } from "firebase/database";
 import { db } from "@/lib/firebase";
 import { compressAndUploadImage } from "@/lib/s3Upload";
-import { Camera, X, Check, Loader2, RotateCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Camera, X, ArrowRight, Loader2, RotateCw, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface LiveFormProps {
   onSuccess?: () => void;
 }
 
 export default function LiveForm({ onSuccess }: LiveFormProps) {
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [name, setName] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [showCamera, setShowCamera] = useState(false);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
-  const [wantsToSee, setWantsToSee] = useState<boolean>(false);
+  const [wantsToSee, setWantsToSee] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (!showCamera) return;
@@ -100,17 +101,13 @@ export default function LiveForm({ onSuccess }: LiveFormProps) {
     setPreview(null);
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!name.trim()) return;
+  const handleSubmit = async () => {
+    if (!name.trim() || !image || wantsToSee === null) return;
     setError(null);
     setLoading(true);
 
     try {
-      let imageURL: string | null = null;
-      if (image) {
-        imageURL = await compressAndUploadImage(image);
-      }
+      const imageURL = await compressAndUploadImage(image);
 
       await push(ref(db, "users"), {
         name,
@@ -135,139 +132,326 @@ export default function LiveForm({ onSuccess }: LiveFormProps) {
     }
   };
 
+  const handleNext = () => {
+    if (step === 1 && name.trim()) {
+      setStep(2);
+    } else if (step === 2 && image) {
+      setStep(3);
+    } else if (step === 3 && wantsToSee !== null) {
+      handleSubmit();
+    }
+  };
+
+  const canProceed = () => {
+    if (step === 1) return name.trim().length > 0;
+    if (step === 2) return image !== null;
+    if (step === 3) return wantsToSee !== null;
+    return false;
+  };
+
   return (
-    <div className="min-h-screen h-screen flex items-center justify-center bg-gradient-to-br from-neutral-100 to-rose-100 p-4">
-      <main className="w-full max-w-[420px] p-5">
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white rounded-2xl shadow-xl p-6 flex flex-col items-center gap-6 min-h-[calc(100vh-40px)] justify-center border border-neutral-200"
-        >
-          <div className="flex flex-col items-center gap-2">
-            <img
-              src="/logo.png"
-              alt="logo"
-              className="w-[72px] h-[72px] object-contain"
-            />
-            <h2 className="text-xl font-extrabold text-neutral-800">
-              Quick Poll
-            </h2>
-            <p className="text-sm text-neutral-500">
-              Your quick response helps us improve
-            </p>
-          </div>
+    <div className="fixed inset-0 h-screen bg-gradient-to-br from-rose-50 via-white to-rose-100 flex items-center justify-center overflow-hidden">
+      {/* Animated background shapes */}
+      <motion.div
+        animate={{
+          scale: [1, 1.2, 1],
+          rotate: [0, 180, 360],
+        }}
+        transition={{
+          duration: 20,
+          repeat: Infinity,
+          ease: "linear",
+        }}
+        className="absolute top-10 right-10 w-64 h-64 bg-rose-200/30 rounded-full blur-3xl pointer-events-none"
+      />
+      <motion.div
+        animate={{
+          scale: [1.2, 1, 1.2],
+          rotate: [360, 180, 0],
+        }}
+        transition={{
+          duration: 15,
+          repeat: Infinity,
+          ease: "linear",
+        }}
+        className="absolute bottom-10 left-10 w-72 h-72 bg-neutral-200/40 rounded-full blur-3xl pointer-events-none"
+      />
 
-          <div className="w-[140px] h-[140px]">
-            <button
-              type="button"
-              onClick={() => setShowCamera(true)}
-              aria-label="Open camera"
-              className="w-full h-full rounded-full overflow-hidden bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center relative p-0 cursor-pointer transition-colors"
+      {/* Main Content */}
+      <div className="relative z-10 w-full max-w-md px-6">
+        <AnimatePresence mode="wait">
+          {/* Step 1: Name */}
+          {step === 1 && (
+            <motion.div
+              key="step1"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              transition={{ duration: 0.3 }}
+              className="flex flex-col items-center text-center"
             >
-              {preview ? (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+                className="mb-6"
+              >
                 <img
-                  src={preview}
-                  alt="avatar"
-                  className="w-full h-full object-cover block"
+                  src="/logo.png"
+                  alt="Logo"
+                  className="w-20 h-20 object-contain mx-auto"
                 />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-rose-500 font-extrabold text-5xl">
-                  {name?.charAt(0) ?? "?"}
-                </div>
-              )}
+              </motion.div>
 
-              {/* Camera overlay icon */}
-              <div className="absolute right-2 bottom-2 w-9 h-9 rounded-full bg-rose-500 hover:bg-rose-600 flex items-center justify-center shadow-lg text-white transition-colors">
-                <Camera className="w-4 h-4 text-white" />
-              </div>
-            </button>
-          </div>
-
-          <div className="w-full">
-            <label
-              htmlFor="name"
-              className="text-sm font-medium text-neutral-700"
-            >
-              Name <span className="text-rose-500">*</span>
-            </label>
-            <Input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter full name"
-              disabled={loading}
-              required
-              className="h-11 mt-2 w-full border-neutral-300 focus:border-rose-500 focus:ring-rose-500"
-            />
-          </div>
-
-          <div className="w-full">
-            <div className="text-sm font-medium text-neutral-700">
-              Do you want to see us?
-            </div>
-            <div className="mt-2 flex gap-2">
-              <button
-                type="button"
-                onClick={() => setWantsToSee(true)}
-                className={`${
-                  wantsToSee
-                    ? "bg-rose-500 text-white shadow-md"
-                    : "bg-white text-neutral-700 hover:bg-neutral-50"
-                } flex-1 py-2.5 rounded-lg border-2 ${
-                  wantsToSee ? "border-rose-500" : "border-neutral-300"
-                } font-medium transition-all`}
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-3xl font-extrabold text-neutral-800 mb-2"
               >
-                Yes
-              </button>
-              <button
-                type="button"
-                onClick={() => setWantsToSee(false)}
-                className={`${
-                  !wantsToSee
-                    ? "bg-rose-500 text-white shadow-md"
-                    : "bg-white text-neutral-700 hover:bg-neutral-50"
-                } flex-1 py-2.5 rounded-lg border-2 ${
-                  !wantsToSee ? "border-rose-500" : "border-neutral-300"
-                } font-medium transition-all`}
+                Quick Poll �
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-base text-neutral-600 mb-10"
               >
-                No
-              </button>
-            </div>
-          </div>
+                Let's start with your name
+              </motion.p>
 
-          <div className="w-full">
-            <Button
-              type="submit"
-              disabled={loading || !name.trim()}
-              className="w-full text-base font-semibold rounded-xl h-12 bg-rose-500 hover:bg-rose-600 disabled:bg-neutral-300 disabled:text-neutral-500 text-white shadow-lg"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                  <span>Submitting...</span>
-                </>
-              ) : (
-                <>
-                  <Check className="h-5 w-5 mr-2" />
-                  <span>Submit</span>
-                </>
-              )}
-            </Button>
-          </div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="w-full"
+              >
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && canProceed() && handleNext()}
+                  placeholder="Your name..."
+                  className="w-full text-center text-2xl font-semibold py-4 px-6 bg-white/80 backdrop-blur-sm border-2 border-neutral-200 rounded-2xl focus:outline-none focus:border-rose-500 focus:ring-4 focus:ring-rose-500/20 transition-all placeholder:text-neutral-400"
+                  autoFocus
+                />
+              </motion.div>
 
-          {error && (
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl w-full">
-              <div className="flex items-start gap-3">
-                <X className="h-5 w-5 text-rose-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-sm font-medium text-rose-800">Error</p>
-                  <p className="text-sm text-rose-600 mt-1">{error}</p>
-                </div>
-              </div>
-            </div>
+              <motion.button
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.6 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleNext}
+                disabled={!canProceed()}
+                className={`mt-8 px-12 py-4 rounded-full font-bold text-lg shadow-xl transition-all flex items-center gap-2 ${
+                  canProceed()
+                    ? "bg-rose-500 text-white hover:bg-rose-600 hover:shadow-2xl"
+                    : "bg-neutral-200 text-neutral-400 cursor-not-allowed"
+                }`}
+              >
+                Continue
+                <ArrowRight className="w-5 h-5" />
+              </motion.button>
+            </motion.div>
           )}
-        </form>
-      </main>
+
+          {/* Step 2: Photo */}
+          {step === 2 && (
+            <motion.div
+              key="step2"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              transition={{ duration: 0.3 }}
+              className="flex flex-col items-center text-center"
+            >
+              <motion.h2
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-3xl font-extrabold text-neutral-800 mb-3"
+              >
+                Great, {name}! 📸
+              </motion.h2>
+
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-lg text-neutral-600 mb-8"
+              >
+                Now take your photo <span className="text-rose-500 font-semibold">*</span>
+              </motion.p>
+
+              <motion.button
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
+                onClick={() => setShowCamera(true)}
+                className="relative group mb-8"
+              >
+                <div className="w-40 h-40 rounded-full overflow-hidden bg-gradient-to-br from-rose-100 to-rose-200 flex items-center justify-center relative shadow-2xl group-hover:shadow-rose-500/50 transition-all">
+                  {preview ? (
+                    <img
+                      src={preview}
+                      alt="preview"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="text-6xl font-extrabold text-rose-500">
+                      {name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Camera className="w-12 h-12 text-white" />
+                  </div>
+                </div>
+              </motion.button>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="flex gap-4"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setStep(1)}
+                  className="px-8 py-3 rounded-full font-semibold text-neutral-600 bg-white border-2 border-neutral-200 hover:border-neutral-300 transition-all"
+                >
+                  Back
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleNext}
+                  className="px-12 py-3 rounded-full font-bold text-white bg-rose-500 hover:bg-rose-600 shadow-xl hover:shadow-2xl transition-all flex items-center gap-2"
+                >
+                  Continue
+                  <ArrowRight className="w-5 h-5" />
+                </motion.button>
+              </motion.div>
+            </motion.div>
+          )}
+
+          {/* Step 3: Question */}
+          {step === 3 && (
+            <motion.div
+              key="step3"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              transition={{ duration: 0.3 }}
+              className="flex flex-col items-center text-center"
+            >
+              <motion.h2
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-3xl font-extrabold text-neutral-800 mb-3"
+              >
+                One last thing! 🎯
+              </motion.h2>
+
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-xl text-neutral-700 mb-12 font-medium"
+              >
+                Do you want to see us?
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.4 }}
+                className="flex gap-4 mb-8"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setWantsToSee(true)}
+                  className={`w-32 h-32 rounded-3xl font-bold text-2xl shadow-xl transition-all ${
+                    wantsToSee === true
+                      ? "bg-gradient-to-br from-rose-500 to-rose-600 text-white scale-105 shadow-rose-500/50"
+                      : "bg-white text-neutral-700 hover:bg-neutral-50"
+                  }`}
+                >
+                  Yes 😊
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setWantsToSee(false)}
+                  className={`w-32 h-32 rounded-3xl font-bold text-2xl shadow-xl transition-all ${
+                    wantsToSee === false
+                      ? "bg-gradient-to-br from-neutral-500 to-neutral-600 text-white scale-105 shadow-neutral-500/50"
+                      : "bg-white text-neutral-700 hover:bg-neutral-50"
+                  }`}
+                >
+                  No 🙏
+                </motion.button>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="flex gap-4"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setStep(2)}
+                  disabled={loading}
+                  className="px-8 py-3 rounded-full font-semibold text-neutral-600 bg-white border-2 border-neutral-200 hover:border-neutral-300 transition-all disabled:opacity-50"
+                >
+                  Back
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: canProceed() && !loading ? 1.05 : 1 }}
+                  whileTap={{ scale: canProceed() && !loading ? 0.95 : 1 }}
+                  onClick={handleNext}
+                  disabled={!canProceed() || loading}
+                  className={`px-12 py-3 rounded-full font-bold shadow-xl transition-all flex items-center gap-2 ${
+                    canProceed() && !loading
+                      ? "bg-rose-500 text-white hover:bg-rose-600 hover:shadow-2xl"
+                      : "bg-neutral-200 text-neutral-400 cursor-not-allowed"
+                  }`}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      Submit ✨
+                    </>
+                  )}
+                </motion.button>
+              </motion.div>
+
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-6 p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 text-sm"
+                >
+                  {error}
+                </motion.div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       {showCamera && (
         <div className="fixed inset-0 z-50 bg-black text-white flex flex-col">

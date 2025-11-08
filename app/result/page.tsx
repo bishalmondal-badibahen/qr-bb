@@ -3,14 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import { ref, onValue } from "firebase/database";
 import { db } from "@/lib/firebase";
+import { motion, useSpring } from "framer-motion";
+import NumberFlow from "@number-flow/react";
 
 export default function ResultPage() {
   const [yesCount, setYesCount] = useState<number>(0);
   const [total, setTotal] = useState<number>(0);
-  const displayedRef = useRef<{ value: number }>({ value: 0 });
-  const [displayed, setDisplayed] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // subscribe to users and compute yes only
+  const [displayedYes, setDisplayedYes] = useState(0);
+
+  // Subscribe to users and compute yes count
   useEffect(() => {
     const usersRef = ref(db, 'users');
     const unsub = onValue(usersRef, (snapshot) => {
@@ -18,65 +21,140 @@ export default function ResultPage() {
       if (!val) {
         setTotal(0);
         setYesCount(0);
+        setIsLoading(false);
         return;
       }
 
       const entries = Object.values(val) as any[];
-      const total = entries.length;
-      let yes = 0;
+      const totalCount = entries.length;
+      let yesCounter = 0;
+
       entries.forEach((e: any) => {
-        if (e?.wantsToSee) yes++;
+        if (e?.wantsToSee === true) {
+          yesCounter++;
+        }
       });
 
-      setTotal(total);
-      setYesCount(yes);
+      setTotal(totalCount);
+      setYesCount(yesCounter);
+      setIsLoading(false);
     });
 
     return () => unsub();
   }, []);
 
-  // animate the displayed counter when yesCount changes
+  // Animating count with spring
+  const springCount = useSpring(0, {
+    bounce: 0,
+    duration: 1200,
+  });
+
+  springCount.on("change", (value) => {
+    setDisplayedYes(Math.round(value));
+  });
+
   useEffect(() => {
-    let rafId: number | null = null;
-    const start = displayedRef.current.value || 0;
-    const end = yesCount;
-    const duration = 700; // ms
-    const startTime = performance.now();
-
-    function step(now: number) {
-      const t = Math.min(1, (now - startTime) / duration);
-      // easeOutCubic
-      const eased = 1 - Math.pow(1 - t, 3);
-      const current = Math.round(start + (end - start) * eased);
-      displayedRef.current.value = current;
-      setDisplayed(current);
-      if (t < 1) {
-        rafId = requestAnimationFrame(step);
-      } else {
-        rafId = null;
-      }
-    }
-
-    // kick off
-    rafId = requestAnimationFrame(step);
-
-    return () => {
-      if (rafId) cancelAnimationFrame(rafId);
-    };
+    springCount.set(yesCount);
   }, [yesCount]);
 
+  const yesPercentage = total > 0 ? Math.round((yesCount / total) * 100) : 0;
+
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-neutral-300 to-rose-300 p-5">
-      <div className="w-full max-w-[720px] p-5 flex items-center justify-center">
-        <div role="status" aria-live="polite" className="flex flex-col items-center gap-3">
-          <div className="text-[14px] text-[color:var(--muted,#6b7280)] uppercase tracking-[1.2px]">Yes (wantsToSee)</div>
-          <div className="w-[260px] h-[260px] rounded-[20px] bg-[color:var(--surface,#fff)] shadow-[0_18px_40px_rgba(0,0,0,0.08)] flex items-center justify-center">
-            <div className="text-center">
-              <div className="text-[96px] font-extrabold text-[color:var(--bprimary)]">{displayed}</div>
-              <div className="mt-1.5 text-[color:var(--muted,#6b7280)]">of {total} responses</div>
+    <main className="relative flex h-screen w-full items-center justify-center overflow-hidden bg-gradient-to-br from-rose-50 via-white to-rose-100">
+      {/* Animated background shapes */}
+      <motion.div
+        animate={{
+          scale: [1, 1.2, 1],
+          rotate: [0, 180, 360],
+        }}
+        transition={{
+          duration: 20,
+          repeat: Infinity,
+          ease: "linear",
+        }}
+        className="absolute top-10 right-10 w-64 h-64 bg-rose-200/20 rounded-full blur-3xl pointer-events-none"
+      />
+      <motion.div
+        animate={{
+          scale: [1.2, 1, 1.2],
+          rotate: [360, 180, 0],
+        }}
+        transition={{
+          duration: 15,
+          repeat: Infinity,
+          ease: "linear",
+        }}
+        className="absolute bottom-10 left-10 w-72 h-72 bg-neutral-200/30 rounded-full blur-3xl pointer-events-none"
+      />
+
+      <div className="relative z-10 flex w-full max-w-2xl flex-col items-center justify-center">
+        {/* Main Counter Card */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="relative w-full max-w-xl"
+        >
+          <div className="bg-gradient-to-br from-rose-500 via-rose-600 to-rose-700 rounded-[3rem] p-12 shadow-2xl relative overflow-hidden">
+            {/* Animated background circle */}
+            <motion.div
+              animate={{
+                scale: [1, 1.5, 1],
+                opacity: [0.1, 0.2, 0.1],
+              }}
+              transition={{
+                duration: 4,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              className="absolute -top-20 -right-20 w-60 h-60 bg-white rounded-full"
+            />
+
+            <div className="relative z-10 text-center">
+              {/* Label */}
+              <motion.p
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="text-white/80 text-lg font-semibold uppercase tracking-wider mb-6"
+              >
+                Want to See Us
+              </motion.p>
+
+              {/* Main Counter with NumberFlow */}
+              <div className="text-[140px] md:text-[180px] font-black text-white leading-none mb-6 tracking-tight">
+                <NumberFlow value={displayedYes} />
+              </div>
+
+              {/* Percentage Badge */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.7, type: "spring" }}
+                className="inline-flex items-center gap-3 bg-white/20 backdrop-blur-sm px-8 py-4 rounded-full border-2 border-white/30"
+              >
+                <span className="text-4xl font-bold text-white">
+                  <NumberFlow value={yesPercentage} suffix="%" />
+                </span>
+                <span className="text-white/80 text-lg">of {total} votes</span>
+              </motion.div>
             </div>
           </div>
-        </div>
+        </motion.div>
+
+        {/* Loading State */}
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm rounded-3xl"
+          >
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-12 h-12 border-4 border-rose-500 border-t-transparent rounded-full animate-spin" />
+              <p className="text-neutral-600 font-medium">Loading statistics...</p>
+            </div>
+          </motion.div>
+        )}
       </div>
     </main>
   );

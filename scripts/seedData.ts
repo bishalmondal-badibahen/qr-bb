@@ -56,6 +56,7 @@ const defaultConfig: SeedConfig = {
 function generateFakeUser(index: number): {
   name: string;
   imageURL: string;
+  wantsToSee: boolean;
   timestamp: number;
 } {
   const firstName = faker.person.firstName();
@@ -77,6 +78,9 @@ function generateFakeUser(index: number): {
     imageURL = (imageSource as (seed: number) => string)(seed);
   }
 
+  // Generate random wantsToSee value (90% true, 10% false for realistic data)
+  const wantsToSee = faker.datatype.boolean({ probability: 0.9 });
+
   // Generate timestamp (spread over last 30 days)
   const daysAgo = faker.number.int({ min: 0, max: 30 });
   const timestamp = Date.now() - daysAgo * 24 * 60 * 60 * 1000 + index * 1000;
@@ -84,6 +88,7 @@ function generateFakeUser(index: number): {
   return {
     name: fullName,
     imageURL,
+    wantsToSee,
     timestamp,
   };
 }
