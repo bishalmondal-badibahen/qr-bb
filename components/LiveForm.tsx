@@ -4,32 +4,27 @@ import { useState, useRef, useEffect } from "react";
 import { ref, push } from "firebase/database";
 import { db } from "@/lib/firebase";
 import { compressAndUploadImage } from "@/lib/s3Upload";
-import { Camera, X, Check, Loader2, Sparkles, RotateCw } from "lucide-react";
+import { Camera, X, Check, Loader2, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
-export default function LiveForm() {
+interface LiveFormProps {
+  onSuccess?: () => void;
+}
+
+export default function LiveForm({ onSuccess }: LiveFormProps) {
   const [name, setName] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [showCamera, setShowCamera] = useState(false);
-  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
+  const [wantsToSee, setWantsToSee] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // Start camera when user opens camera mode
   useEffect(() => {
     if (!showCamera) return;
 
@@ -37,7 +32,6 @@ export default function LiveForm() {
 
     async function enableCamera() {
       try {
-        // stop any existing tracks
         if (streamRef.current) {
           streamRef.current.getTracks().forEach((t) => t.stop());
           streamRef.current = null;
@@ -55,9 +49,7 @@ export default function LiveForm() {
           videoRef.current.srcObject = stream;
           try {
             await videoRef.current.play();
-          } catch (e) {
-            // ignore autoplay play error
-          }
+          } catch {}
         }
       } catch (err) {
         console.error(err);
@@ -77,28 +69,30 @@ export default function LiveForm() {
     };
   }, [showCamera, facingMode]);
 
-  // Capture a photo from camera
+  const toggleFacing = () =>
+    setFacingMode((f) => (f === "user" ? "environment" : "user"));
+
   const capturePhoto = () => {
     if (!videoRef.current) return;
-
     const canvas = document.createElement("canvas");
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
-
+    canvas.width = videoRef.current.videoWidth || 1280;
+    canvas.height = videoRef.current.videoHeight || 720;
     const ctx = canvas.getContext("2d");
-    ctx?.drawImage(videoRef.current, 0, 0);
-
-    canvas.toBlob((blob) => {
-      if (!blob) return;
-      const file = new File([blob], `camera_${Date.now()}.jpg`, {
-        type: "image/jpeg",
-      });
-
-      setImage(file);
-      setPreview(URL.createObjectURL(file));
-      // close camera to show avatar preview in form
-      setShowCamera(false);
-    }, "image/jpeg");
+    if (!ctx) return;
+    ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return;
+        const file = new File([blob], `camera_${Date.now()}.jpg`, {
+          type: "image/jpeg",
+        });
+        setImage(file);
+        setPreview(URL.createObjectURL(file));
+        setShowCamera(false);
+      },
+      "image/jpeg",
+      0.9
+    );
   };
 
   const removeImage = () => {
@@ -106,218 +100,216 @@ export default function LiveForm() {
     setPreview(null);
   };
 
-  const toggleFacing = () => {
-    setFacingMode((f) => (f === "user" ? "environment" : "user"));
-  };
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!name.trim()) return;
-
     setError(null);
-    setSuccess(false);
     setLoading(true);
 
     try {
-      let imageURL = null;
-
-      // Upload image to S3 with compression if present
+      let imageURL: string | null = null;
       if (image) {
-        console.log("📸 Uploading image to S3...");
         imageURL = await compressAndUploadImage(image);
-        console.log("✅ Image uploaded successfully:", imageURL);
       }
 
-      // Save to Firebase Realtime Database
       await push(ref(db, "users"), {
         name,
         imageURL,
+        wantsToSee,
         timestamp: Date.now(),
       });
 
-      // Reset form state
       setName("");
       setImage(null);
       setPreview(null);
-      setSuccess(true);
 
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(false), 3000);
+      // Call success callback to switch to thank-you tab
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (err) {
-      console.error("❌ Submission error:", err);
-      setError(
-        err instanceof Error
-          ? `Failed to submit: ${err.message}`
-          : "Failed to submit.",
-      );
+      console.error(err);
+      setError(err instanceof Error ? err.message : "Failed to submit");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <>
-      <Card className="glass border-border/50 shadow-2xl animate-fade-in overflow-hidden">
-        <CardHeader className="space-y-1 bg-gradient-to-br from-primary/5 via-purple-500/5 to-pink-500/5 border-b">
-          <div className="flex items-center gap-2">
-            <div className="h-10 w-10 rounded-lg gradient-primary flex items-center justify-center shadow-lg">
-              <Sparkles className="h-5 w-5 text-white" />
+    <div className="min-h-screen h-screen flex items-center justify-center bg-gradient-to-br from-neutral-100 to-rose-100 p-4">
+      <main className="w-full max-w-[420px] p-5">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white rounded-2xl shadow-xl p-6 flex flex-col items-center gap-6 min-h-[calc(100vh-40px)] justify-center border border-neutral-200"
+        >
+          <div className="flex flex-col items-center gap-2">
+            <img
+              src="/logo.png"
+              alt="logo"
+              className="w-[72px] h-[72px] object-contain"
+            />
+            <h2 className="text-xl font-extrabold text-neutral-800">
+              Quick Poll
+            </h2>
+            <p className="text-sm text-neutral-500">
+              Your quick response helps us improve
+            </p>
+          </div>
+
+          <div className="w-[140px] h-[140px]">
+            <button
+              type="button"
+              onClick={() => setShowCamera(true)}
+              aria-label="Open camera"
+              className="w-full h-full rounded-full overflow-hidden bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center relative p-0 cursor-pointer transition-colors"
+            >
+              {preview ? (
+                <img
+                  src={preview}
+                  alt="avatar"
+                  className="w-full h-full object-cover block"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-rose-500 font-extrabold text-5xl">
+                  {name?.charAt(0) ?? "?"}
+                </div>
+              )}
+
+              {/* Camera overlay icon */}
+              <div className="absolute right-2 bottom-2 w-9 h-9 rounded-full bg-rose-500 hover:bg-rose-600 flex items-center justify-center shadow-lg text-white transition-colors">
+                <Camera className="w-4 h-4 text-white" />
+              </div>
+            </button>
+          </div>
+
+          <div className="w-full">
+            <label
+              htmlFor="name"
+              className="text-sm font-medium text-neutral-700"
+            >
+              Name <span className="text-rose-500">*</span>
+            </label>
+            <Input
+              id="name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter full name"
+              disabled={loading}
+              required
+              className="h-11 mt-2 w-full border-neutral-300 focus:border-rose-500 focus:ring-rose-500"
+            />
+          </div>
+
+          <div className="w-full">
+            <div className="text-sm font-medium text-neutral-700">
+              Do you want to see us?
             </div>
-            <div>
-              <CardTitle className="text-2xl bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-                Add New Entry
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Fill in the details below to create a new entry
-              </CardDescription>
+            <div className="mt-2 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setWantsToSee(true)}
+                className={`${
+                  wantsToSee
+                    ? "bg-rose-500 text-white shadow-md"
+                    : "bg-white text-neutral-700 hover:bg-neutral-50"
+                } flex-1 py-2.5 rounded-lg border-2 ${
+                  wantsToSee ? "border-rose-500" : "border-neutral-300"
+                } font-medium transition-all`}
+              >
+                Yes
+              </button>
+              <button
+                type="button"
+                onClick={() => setWantsToSee(false)}
+                className={`${
+                  !wantsToSee
+                    ? "bg-rose-500 text-white shadow-md"
+                    : "bg-white text-neutral-700 hover:bg-neutral-50"
+                } flex-1 py-2.5 rounded-lg border-2 ${
+                  !wantsToSee ? "border-rose-500" : "border-neutral-300"
+                } font-medium transition-all`}
+              >
+                No
+              </button>
             </div>
           </div>
-        </CardHeader>
 
-        <CardContent className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Name Field */}
-            <div className="space-y-2">
-              <label
-                htmlFor="name"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Name <span className="text-destructive">*</span>
-              </label>
-              <Input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter full name"
-                disabled={loading}
-                required
-                className="h-11 transition-all duration-200 focus:scale-[1.01]"
-              />
-            </div>
-
-            {/* Photo (camera-only) */}
-            <div className="space-y-3">
-              <label className="text-sm font-medium leading-none">Photo <span className="text-muted-foreground">(capture only)</span></label>
-
-              <div className="flex items-center gap-4">
-                <div>
-                  <div style={{ width: 72, height: 72, borderRadius: 9999, overflow: 'hidden', background: 'rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {preview ? (
-                      <img src={preview} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontWeight: 700 }}>{name?.charAt(0) ?? '?'}</div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex-1">
-                  <div className="text-sm text-muted">Tap the camera to open full-screen capture</div>
-                  <div className="mt-2 flex gap-2">
-                    <Button type="button" onClick={() => setShowCamera(true)} className="btn-primary">
-                      <Camera className="h-4 w-4" />
-                      Open Camera
-                    </Button>
-                    {preview && (
-                      <Button type="button" variant="outline" onClick={removeImage}>
-                        Remove
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Submit Button */}
+          <div className="w-full">
             <Button
               type="submit"
               disabled={loading || !name.trim()}
-              variant="success"
-              size="lg"
-              className="w-full text-base font-semibold rounded-xl h-12 hover:scale-[1.02] transition-all duration-300"
+              className="w-full text-base font-semibold rounded-xl h-12 bg-rose-500 hover:bg-rose-600 disabled:bg-neutral-300 disabled:text-neutral-500 text-white shadow-lg"
             >
               {loading ? (
                 <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <Loader2 className="h-5 w-5 animate-spin mr-2" />
                   <span>Submitting...</span>
                 </>
               ) : (
                 <>
-                  <Check className="h-5 w-5" />
-                  <span>Submit Entry</span>
+                  <Check className="h-5 w-5 mr-2" />
+                  <span>Submit</span>
                 </>
               )}
             </Button>
+          </div>
 
-            {/* Error Message */}
-            {error && (
-              <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-xl animate-fade-in">
-                <div className="flex items-start gap-3">
-                  <X className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium text-destructive">
-                      Error
-                    </p>
-                    <p className="text-sm text-destructive/80 mt-1">{error}</p>
-                  </div>
+          {error && (
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl w-full">
+              <div className="flex items-start gap-3">
+                <X className="h-5 w-5 text-rose-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-rose-800">Error</p>
+                  <p className="text-sm text-rose-600 mt-1">{error}</p>
                 </div>
               </div>
-            )}
+            </div>
+          )}
+        </form>
+      </main>
 
-            {/* Success Message */}
-            {success && (
-              <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-xl animate-fade-in">
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
-                    <Check className="h-4 w-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-green-700 dark:text-green-400">
-                      Success!
-                    </p>
-                    <p className="text-sm text-green-600 dark:text-green-500">
-                      Entry submitted successfully
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </form>
-        </CardContent>
-      </Card>
-
-      {/* Camera Modal */}
       {showCamera && (
-        <div className="fixed inset-0 z-50 bg-black text-white" style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ position: 'relative', flex: 1, width: '100%', height: '100%' }}>
+        <div className="fixed inset-0 z-50 bg-black text-white flex flex-col">
+          <div className="relative flex-1 w-full h-full">
             <video
               ref={videoRef}
               autoPlay
               playsInline
               muted
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              className="w-full h-full object-cover"
             />
 
-            {/* Top controls */}
-            <div style={{ position: 'absolute', top: 12, left: 12, right: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <button onClick={() => setShowCamera(false)} style={{ background: 'rgba(0,0,0,0.4)', border: 'none', padding: 8, borderRadius: 9999 }} aria-label="Close">
-                <X />
+            <div className="absolute top-4 left-4 right-4 flex justify-between items-center">
+              <button
+                onClick={() => setShowCamera(false)}
+                className="bg-neutral-900/60 backdrop-blur-sm p-3 rounded-full hover:bg-neutral-900/80 transition-colors"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
               </button>
 
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={toggleFacing} style={{ background: 'rgba(0,0,0,0.4)', border: 'none', padding: 8, borderRadius: 8 }} aria-label="Switch camera">
-                  <RotateCw />
+              <div className="flex gap-2">
+                <button
+                  onClick={toggleFacing}
+                  className="bg-neutral-900/60 backdrop-blur-sm p-3 rounded-full hover:bg-neutral-900/80 transition-colors"
+                  aria-label="Switch camera"
+                >
+                  <RotateCw className="w-5 h-5" />
                 </button>
               </div>
             </div>
 
-            {/* Bottom capture area */}
-            <div style={{ position: 'absolute', left: 0, right: 0, bottom: 24, display: 'flex', justifyContent: 'center', pointerEvents: 'auto' }}>
-              <button onClick={capturePhoto} aria-label="Capture" style={{ width: 84, height: 84, borderRadius: 9999, background: 'rgba(255,255,255,0.9)', border: '6px solid rgba(0,0,0,0.15)' }} />
+            <div className="absolute left-0 right-0 bottom-8 flex justify-center pointer-events-auto">
+              <button
+                onClick={capturePhoto}
+                aria-label="Capture"
+                className="w-20 h-20 rounded-full bg-white hover:bg-neutral-100 border-4 border-rose-500 shadow-2xl transition-all active:scale-95"
+              />
             </div>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

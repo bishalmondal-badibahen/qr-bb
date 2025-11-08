@@ -191,7 +191,7 @@ export default function DisplayPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-300 to-rose-300 flex items-center justify-center">
         <div className="flex flex-col items-center space-y-6 animate-fade-in">
           <div className="relative">
             <div className="h-20 w-20 rounded-full border-4 border-primary/30 border-t-primary animate-spin" />
