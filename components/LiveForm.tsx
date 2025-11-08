@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { ref, push } from "firebase/database";
 import { db } from "@/lib/firebase";
 import { compressAndUploadImage } from "@/lib/s3Upload";
-import { Camera, Upload, X, Check, Loader2, Sparkles } from "lucide-react";
+import { Camera, X, Check, Loader2, Sparkles, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -21,39 +21,61 @@ export default function LiveForm() {
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [showCamera, setShowCamera] = useState(false);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Start camera when user opens camera mode
   useEffect(() => {
     if (!showCamera) return;
 
+    let mounted = true;
+
     async function enableCamera() {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user" },
-        });
+        // stop any existing tracks
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach((t) => t.stop());
+          streamRef.current = null;
+        }
+
+        const constraints: MediaStreamConstraints = {
+          video: { facingMode },
+          audio: false,
+        };
+
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        if (!mounted) return;
         streamRef.current = stream;
-        if (videoRef.current) videoRef.current.srcObject = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          try {
+            await videoRef.current.play();
+          } catch (e) {
+            // ignore autoplay play error
+          }
+        }
       } catch (err) {
         console.error(err);
-        setError("Camera access denied.");
+        setError("Camera access denied or not available.");
         setShowCamera(false);
       }
     }
 
     enableCamera();
+
     return () => {
+      mounted = false;
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
       }
     };
-  }, [showCamera]);
+  }, [showCamera, facingMode]);
 
   // Capture a photo from camera
   const capturePhoto = () => {
@@ -74,24 +96,18 @@ export default function LiveForm() {
 
       setImage(file);
       setPreview(URL.createObjectURL(file));
+      // close camera to show avatar preview in form
       setShowCamera(false);
     }, "image/jpeg");
-  };
-
-  const handleFilePicker = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setImage(file);
-    setPreview(URL.createObjectURL(file));
   };
 
   const removeImage = () => {
     setImage(null);
     setPreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+  };
+
+  const toggleFacing = () => {
+    setFacingMode((f) => (f === "user" ? "environment" : "user"));
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -124,9 +140,6 @@ export default function LiveForm() {
       setImage(null);
       setPreview(null);
       setSuccess(true);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
 
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(false), 3000);
@@ -183,91 +196,36 @@ export default function LiveForm() {
               />
             </div>
 
-            {/* Image Upload Section */}
+            {/* Photo (camera-only) */}
             <div className="space-y-3">
-              <label className="text-sm font-medium leading-none">
-                Photo <span className="text-muted-foreground">(Optional)</span>
-              </label>
+              <label className="text-sm font-medium leading-none">Photo <span className="text-muted-foreground">(capture only)</span></label>
 
-              {preview ? (
-                /* Image Preview */
-                <div className="relative group animate-fade-in">
-                  <div className="relative w-full aspect-video rounded-xl overflow-hidden border-2 border-border shadow-lg ring-4 ring-primary/10 transition-all duration-300 hover:ring-primary/20">
-                    <img
-                      src={preview}
-                      alt="preview"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="flex items-center gap-4">
+                <div>
+                  <div style={{ width: 72, height: 72, borderRadius: 9999, overflow: 'hidden', background: 'rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {preview ? (
+                      <img src={preview} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontWeight: 700 }}>{name?.charAt(0) ?? '?'}</div>
+                    )}
                   </div>
-                  <Button
-                    type="button"
-                    onClick={removeImage}
-                    disabled={loading}
-                    size="icon"
-                    variant="destructive"
-                    className="absolute top-3 right-3 h-9 w-9 rounded-full shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                  <Badge
-                    className="absolute top-3 left-3 shadow-lg"
-                    variant="success"
-                  >
-                    <Check className="h-3 w-3 mr-1" />
-                    Ready
-                  </Badge>
                 </div>
-              ) : (
-                /* Upload Options */
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* File Upload Button */}
-                  <Button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={loading}
-                    variant="gradient"
-                    className="h-auto py-6 rounded-xl hover:scale-105 transition-all duration-300"
-                  >
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">
-                        <Upload className="h-6 w-6" />
-                      </div>
-                      <div className="text-center">
-                        <div className="font-semibold">Upload Photo</div>
-                        <div className="text-xs opacity-90">From gallery</div>
-                      </div>
-                    </div>
-                  </Button>
 
-                  {/* Camera Button */}
-                  <Button
-                    type="button"
-                    onClick={() => setShowCamera(true)}
-                    disabled={loading}
-                    className="h-auto py-6 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
-                  >
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">
-                        <Camera className="h-6 w-6" />
-                      </div>
-                      <div className="text-center">
-                        <div className="font-semibold">Take Photo</div>
-                        <div className="text-xs opacity-90">Use camera</div>
-                      </div>
-                    </div>
-                  </Button>
-
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFilePicker}
-                    disabled={loading}
-                    className="hidden"
-                  />
+                <div className="flex-1">
+                  <div className="text-sm text-muted">Tap the camera to open full-screen capture</div>
+                  <div className="mt-2 flex gap-2">
+                    <Button type="button" onClick={() => setShowCamera(true)} className="btn-primary">
+                      <Camera className="h-4 w-4" />
+                      Open Camera
+                    </Button>
+                    {preview && (
+                      <Button type="button" variant="outline" onClick={removeImage}>
+                        Remove
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              )}
+              </div>
             </div>
 
             {/* Submit Button */}
@@ -330,51 +288,32 @@ export default function LiveForm() {
 
       {/* Camera Modal */}
       {showCamera && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-          <div className="bg-card rounded-2xl shadow-2xl max-w-3xl w-full overflow-hidden border border-border animate-slide-in">
-            <div className="relative aspect-video bg-gray-900">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 ring-1 ring-inset ring-white/10" />
-              <Badge
-                className="absolute top-4 left-4 shadow-lg"
-                variant="destructive"
-              >
-                <div className="h-2 w-2 rounded-full bg-white mr-2 animate-pulse" />
-                Recording
-              </Badge>
+        <div className="fixed inset-0 z-50 bg-black text-white" style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ position: 'relative', flex: 1, width: '100%', height: '100%' }}>
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+
+            {/* Top controls */}
+            <div style={{ position: 'absolute', top: 12, left: 12, right: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <button onClick={() => setShowCamera(false)} style={{ background: 'rgba(0,0,0,0.4)', border: 'none', padding: 8, borderRadius: 9999 }} aria-label="Close">
+                <X />
+              </button>
+
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={toggleFacing} style={{ background: 'rgba(0,0,0,0.4)', border: 'none', padding: 8, borderRadius: 8 }} aria-label="Switch camera">
+                  <RotateCw />
+                </button>
+              </div>
             </div>
 
-            <div className="p-6 space-y-3 bg-gradient-to-b from-background to-muted/20">
-              <p className="text-sm text-muted-foreground text-center">
-                Position yourself in the frame and click capture
-              </p>
-              <div className="flex gap-3">
-                <Button
-                  type="button"
-                  onClick={capturePhoto}
-                  variant="gradient"
-                  size="lg"
-                  className="flex-1 rounded-xl h-12 hover:scale-[1.02] transition-all duration-300"
-                >
-                  <Camera className="h-5 w-5" />
-                  Capture Photo
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => setShowCamera(false)}
-                  variant="outline"
-                  size="lg"
-                  className="rounded-xl h-12 px-6 hover:scale-[1.02] transition-all duration-300"
-                >
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
+            {/* Bottom capture area */}
+            <div style={{ position: 'absolute', left: 0, right: 0, bottom: 24, display: 'flex', justifyContent: 'center', pointerEvents: 'auto' }}>
+              <button onClick={capturePhoto} aria-label="Capture" style={{ width: 84, height: 84, borderRadius: 9999, background: 'rgba(255,255,255,0.9)', border: '6px solid rgba(0,0,0,0.15)' }} />
             </div>
           </div>
         </div>

@@ -21,7 +21,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      {!isDisplayPage && (
+      {/* {!isDisplayPage && (
         <header className="sticky top-0 z-40 w-full border-b border-border/40 glass backdrop-blur-xl">
           <div className="container mx-auto px-4">
             <div className="flex h-16 items-center justify-between">
@@ -46,7 +46,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </header>
-      )}
+      )} */}
 
       <main className={isDisplayPage ? "h-screen" : "min-h-[calc(100vh-4rem)]"}>
         {children}

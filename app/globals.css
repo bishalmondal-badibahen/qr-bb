@@ -4,48 +4,63 @@
 
 @layer base {
     :root {
-        --background: 0 0% 100%;
-        --foreground: 222.2 84% 4.9%;
+        /* BadiBahen Admin color tokens (H S L triplets for use with hsl(var(--name) / <alpha>)) */
+        --bprimary: 347 61% 54%; /* #D14362 */
+        --bprimary-dark: 350 60% 44%; /* #B32C43 */
+        --accent-amber: 35 98% 53%; /* #FC9B12 */
+        --accent-yellow: 45 100% 52%; /* #FFC30C */
+        --neutral-dark: 227 16% 29%; /* #3E4356 */
+        --muted-1: 220 9% 46%; /* #6B7280 */
+        --muted-2: 243 9% 49%; /* #737288 approx */
+        --success: 115 78% 41%; /* #24B817 */
+        --danger: 0 100% 50%; /* #FF0000 */
+        --surface: 0 0% 100%; /* #FFFFFF */
+        --page-bg: 0 0% 95%; /* #f1f1f1 */
+
+        /* semantic aliases used by the theme */
+        --background: var(--page-bg);
+        --foreground: var(--neutral-dark);
         --card: 0 0% 100%;
-        --card-foreground: 222.2 84% 4.9%;
+        --card-foreground: var(--foreground);
         --popover: 0 0% 100%;
-        --popover-foreground: 222.2 84% 4.9%;
-        --primary: 221.2 83.2% 53.3%;
+        --popover-foreground: var(--foreground);
+        --primary: var(--bprimary);
         --primary-foreground: 210 40% 98%;
-        --secondary: 210 40% 96.1%;
-        --secondary-foreground: 222.2 47.4% 11.2%;
-        --muted: 210 40% 96.1%;
-        --muted-foreground: 215.4 16.3% 46.9%;
-        --accent: 210 40% 96.1%;
-        --accent-foreground: 222.2 47.4% 11.2%;
-        --destructive: 0 84.2% 60.2%;
+        --secondary: 0 0% 98%;
+        --secondary-foreground: var(--neutral-dark);
+        --muted: var(--muted-1);
+        --muted-foreground: 215 16% 46.9%;
+        --accent: var(--accent-amber);
+        --accent-foreground: 210 40% 11.2%;
+        --destructive: var(--danger);
         --destructive-foreground: 210 40% 98%;
-        --border: 214.3 31.8% 91.4%;
-        --input: 214.3 31.8% 91.4%;
-        --ring: 221.2 83.2% 53.3%;
+        --border: 0 0% 90%;
+        --input: 0 0% 100%;
+        --ring: var(--bprimary);
         --radius: 0.5rem;
     }
 
     .dark {
-        --background: 222.2 84% 4.9%;
-        --foreground: 210 40% 98%;
-        --card: 222.2 84% 4.9%;
-        --card-foreground: 210 40% 98%;
-        --popover: 222.2 84% 4.9%;
-        --popover-foreground: 210 40% 98%;
-        --primary: 217.2 91.2% 59.8%;
-        --primary-foreground: 222.2 47.4% 11.2%;
-        --secondary: 217.2 32.6% 17.5%;
-        --secondary-foreground: 210 40% 98%;
-        --muted: 217.2 32.6% 17.5%;
+        /* Dark mode aliases — keep brand tokens but adapt background/foreground */
+        --background: 227 16% 12%; /* very dark surface */
+        --foreground: 0 0% 98%;
+        --card: 227 16% 12%;
+        --card-foreground: var(--foreground);
+        --popover: 227 16% 12%;
+        --popover-foreground: var(--foreground);
+        --primary: 347 61% 44%; /* slightly deeper primary for dark */
+        --primary-foreground: 0 0% 100%;
+        --secondary: 217 32% 17.5%;
+        --secondary-foreground: 0 0% 100%;
+        --muted: 220 9% 66%;
         --muted-foreground: 215 20.2% 65.1%;
-        --accent: 217.2 32.6% 17.5%;
-        --accent-foreground: 210 40% 98%;
-        --destructive: 0 62.8% 30.6%;
-        --destructive-foreground: 210 40% 98%;
-        --border: 217.2 32.6% 17.5%;
-        --input: 217.2 32.6% 17.5%;
-        --ring: 224.3 76.3% 48%;
+        --accent: var(--accent-amber);
+        --accent-foreground: 0 0% 100%;
+        --destructive: var(--danger);
+        --destructive-foreground: 0 0% 100%;
+        --border: 227 16% 17.5%;
+        --input: 227 16% 17.5%;
+        --ring: var(--bprimary-dark);
     }
 }
 
