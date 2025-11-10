@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Check, BarChart3, Users } from "lucide-react";
-import DynamicIsland from "./DynamicIsland";
+import DynamicIslandThankYou from "./DynamicIslandThankYou";
 
 interface ThankYouTabProps {
   onBackToForm: () => void;
@@ -28,7 +28,7 @@ export default function ThankYouTab({ onBackToForm }: ThankYouTabProps) {
     <>
       {/* Dynamic Island - Live Poll Counter */}
       <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
-        <DynamicIsland />
+        <DynamicIslandThankYou />
       </div>
 
       <motion.div
