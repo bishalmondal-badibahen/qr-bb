@@ -46,7 +46,7 @@ interface SeedConfig {
 
 const defaultConfig: SeedConfig = {
   totalEntries: 100,
-  delayMs: 500, // 500ms between each entry
+  delayMs: 1500, // 1.5 seconds between each entry for smoother viewing
   clearExisting: false, // Set to true to clear existing data first
 };
 

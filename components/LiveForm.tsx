@@ -4,8 +4,16 @@ import { useState, useRef, useEffect } from "react";
 import { ref, push } from "firebase/database";
 import { db } from "@/lib/firebase";
 import { compressAndUploadImage } from "@/lib/s3Upload";
-import { Camera, X, ArrowRight, Loader2, RotateCw, Sparkles } from "lucide-react";
+import {
+  Camera,
+  X,
+  ArrowRight,
+  Loader2,
+  RotateCw,
+  Sparkles,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import DynamicIsland from "./DynamicIsland";
 
 interface LiveFormProps {
   onSuccess?: () => void;
@@ -150,350 +158,347 @@ export default function LiveForm({ onSuccess }: LiveFormProps) {
   };
 
   return (
-    <div className="fixed inset-0 h-screen bg-gradient-to-br from-rose-50 via-white to-rose-100 flex items-center justify-center overflow-hidden">
-      {/* Animated background shapes */}
-      <motion.div
-        animate={{
-          scale: [1, 1.2, 1],
-          rotate: [0, 180, 360],
-        }}
-        transition={{
-          duration: 20,
-          repeat: Infinity,
-          ease: "linear",
-        }}
-        className="absolute top-10 right-10 w-64 h-64 bg-rose-200/30 rounded-full blur-3xl pointer-events-none"
-      />
-      <motion.div
-        animate={{
-          scale: [1.2, 1, 1.2],
-          rotate: [360, 180, 0],
-        }}
-        transition={{
-          duration: 15,
-          repeat: Infinity,
-          ease: "linear",
-        }}
-        className="absolute bottom-10 left-10 w-72 h-72 bg-neutral-200/40 rounded-full blur-3xl pointer-events-none"
-      />
+    <>
+      {/* Dynamic Island - Live Poll Counter (hidden when camera is open) */}
+      {!showCamera && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
+          <DynamicIsland />
+        </div>
+      )}
 
-      {/* Main Content */}
-      <div className="relative z-10 w-full max-w-md px-6">
-        <AnimatePresence mode="wait">
-          {/* Step 1: Name */}
-          {step === 1 && (
-            <motion.div
-              key="step1"
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -50 }}
-              transition={{ duration: 0.3 }}
-              className="flex flex-col items-center text-center"
-            >
+      <div className="fixed inset-0 h-screen bg-gradient-to-br from-white via-rose-50 to-rose-100 flex items-center justify-center overflow-hidden p-4">
+        {/* Main Content Card */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="relative z-10 w-full max-w-lg"
+        >
+          <AnimatePresence mode="wait">
+            {/* Step 1: Name */}
+            {step === 1 && (
               <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
-                className="mb-6"
+                key="step1"
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -50 }}
+                transition={{ duration: 0.3 }}
+                className="flex flex-col items-center text-center"
               >
-                <img
-                  src="/logo.png"
-                  alt="Logo"
-                  className="w-20 h-20 object-contain mx-auto"
-                />
-              </motion.div>
-
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="text-3xl font-extrabold text-neutral-800 mb-2"
-              >
-                Quick Poll �
-              </motion.h1>
-
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="text-base text-neutral-600 mb-10"
-              >
-                Let's start with your name
-              </motion.p>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="w-full"
-              >
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && canProceed() && handleNext()}
-                  placeholder="Your name..."
-                  className="w-full text-center text-2xl font-semibold py-4 px-6 bg-white/80 backdrop-blur-sm border-2 border-neutral-200 rounded-2xl focus:outline-none focus:border-rose-500 focus:ring-4 focus:ring-rose-500/20 transition-all placeholder:text-neutral-400"
-                  autoFocus
-                />
-              </motion.div>
-
-              <motion.button
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.6 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleNext}
-                disabled={!canProceed()}
-                className={`mt-8 px-12 py-4 rounded-full font-bold text-lg shadow-xl transition-all flex items-center gap-2 ${
-                  canProceed()
-                    ? "bg-rose-500 text-white hover:bg-rose-600 hover:shadow-2xl"
-                    : "bg-neutral-200 text-neutral-400 cursor-not-allowed"
-                }`}
-              >
-                Continue
-                <ArrowRight className="w-5 h-5" />
-              </motion.button>
-            </motion.div>
-          )}
-
-          {/* Step 2: Photo */}
-          {step === 2 && (
-            <motion.div
-              key="step2"
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -50 }}
-              transition={{ duration: 0.3 }}
-              className="flex flex-col items-center text-center"
-            >
-              <motion.h2
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="text-3xl font-extrabold text-neutral-800 mb-3"
-              >
-                Great, {name}! 📸
-              </motion.h2>
-
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="text-lg text-neutral-600 mb-8"
-              >
-                Now take your photo <span className="text-rose-500 font-semibold">*</span>
-              </motion.p>
-
-              <motion.button
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
-                onClick={() => setShowCamera(true)}
-                className="relative group mb-8"
-              >
-                <div className="w-40 h-40 rounded-full overflow-hidden bg-gradient-to-br from-rose-100 to-rose-200 flex items-center justify-center relative shadow-2xl group-hover:shadow-rose-500/50 transition-all">
-                  {preview ? (
-                    <img
-                      src={preview}
-                      alt="preview"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="text-6xl font-extrabold text-rose-500">
-                      {name.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Camera className="w-12 h-12 text-white" />
-                  </div>
-                </div>
-              </motion.button>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-                className="flex gap-4"
-              >
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setStep(1)}
-                  className="px-8 py-3 rounded-full font-semibold text-neutral-600 bg-white border-2 border-neutral-200 hover:border-neutral-300 transition-all"
+                <motion.div
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{
+                    delay: 0.1,
+                    type: "spring",
+                    stiffness: 150,
+                    damping: 10,
+                  }}
+                  className="mb-8"
                 >
-                  Back
-                </motion.button>
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-rose-400 to-rose-600 rounded-2xl blur-xl opacity-40"></div>
+                    <img
+                      src="/logo.png"
+                      alt="Logo"
+                      className="relative w-24 h-24 object-contain mx-auto drop-shadow-lg"
+                    />
+                  </div>
+                </motion.div>
+
+                <motion.h1
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-4xl md:text-5xl font-black bg-gradient-to-r from-rose-600 to-rose-500 bg-clip-text text-transparent mb-3"
+                >
+                  Quick Poll ✨
+                </motion.h1>
+
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-lg text-neutral-600 mb-12 font-medium"
+                >
+                  Let's start with your name
+                </motion.p>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="w-full"
+                >
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" && canProceed() && handleNext()
+                    }
+                    placeholder="Your name..."
+                    className="w-[80%] text-center text-2xl font-semibold py-3 px-4 bg-white/90 backdrop-blur-sm border-2 border-neutral-200 rounded-2xl focus:outline-none focus:border-rose-500 focus:ring-4 focus:ring-rose-500/20 transition-all placeholder:text-neutral-400 shadow-lg shadow-rose-500/5"
+                    autoFocus
+                  />
+                </motion.div>
+
                 <motion.button
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5 }}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handleNext}
-                  className="px-12 py-3 rounded-full font-bold text-white bg-rose-500 hover:bg-rose-600 shadow-xl hover:shadow-2xl transition-all flex items-center gap-2"
+                  disabled={!canProceed()}
+                  className={`mt-10 px-8 py-3 rounded-2xl font-bold text-lg shadow-2xl transition-all flex items-center gap-3 ${
+                    canProceed()
+                      ? "bg-gradient-to-r from-rose-500 to-rose-600 text-white hover:from-rose-600 hover:to-rose-700 hover:shadow-rose-500/50"
+                      : "bg-white/10 border border-white text-neutral-500 cursor-not-allowed"
+                  }`}
                 >
                   Continue
                   <ArrowRight className="w-5 h-5" />
                 </motion.button>
               </motion.div>
-            </motion.div>
-          )}
+            )}
 
-          {/* Step 3: Question */}
-          {step === 3 && (
-            <motion.div
-              key="step3"
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -50 }}
-              transition={{ duration: 0.3 }}
-              className="flex flex-col items-center text-center"
-            >
-              <motion.h2
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="text-3xl font-extrabold text-neutral-800 mb-3"
-              >
-                One last thing! 🎯
-              </motion.h2>
-
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="text-xl text-neutral-700 mb-12 font-medium"
-              >
-                Do you want to see us?
-              </motion.p>
-
+            {/* Step 2: Photo */}
+            {step === 2 && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.4 }}
-                className="flex gap-4 mb-8"
+                key="step2"
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -50 }}
+                transition={{ duration: 0.3 }}
+                className="flex flex-col items-center text-center"
               >
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setWantsToSee(true)}
-                  className={`w-32 h-32 rounded-3xl font-bold text-2xl shadow-xl transition-all ${
-                    wantsToSee === true
-                      ? "bg-gradient-to-br from-rose-500 to-rose-600 text-white scale-105 shadow-rose-500/50"
-                      : "bg-white text-neutral-700 hover:bg-neutral-50"
-                  }`}
-                >
-                  Yes 😊
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setWantsToSee(false)}
-                  className={`w-32 h-32 rounded-3xl font-bold text-2xl shadow-xl transition-all ${
-                    wantsToSee === false
-                      ? "bg-gradient-to-br from-neutral-500 to-neutral-600 text-white scale-105 shadow-neutral-500/50"
-                      : "bg-white text-neutral-700 hover:bg-neutral-50"
-                  }`}
-                >
-                  No 🙏
-                </motion.button>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-                className="flex gap-4"
-              >
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setStep(2)}
-                  disabled={loading}
-                  className="px-8 py-3 rounded-full font-semibold text-neutral-600 bg-white border-2 border-neutral-200 hover:border-neutral-300 transition-all disabled:opacity-50"
-                >
-                  Back
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: canProceed() && !loading ? 1.05 : 1 }}
-                  whileTap={{ scale: canProceed() && !loading ? 0.95 : 1 }}
-                  onClick={handleNext}
-                  disabled={!canProceed() || loading}
-                  className={`px-12 py-3 rounded-full font-bold shadow-xl transition-all flex items-center gap-2 ${
-                    canProceed() && !loading
-                      ? "bg-rose-500 text-white hover:bg-rose-600 hover:shadow-2xl"
-                      : "bg-neutral-200 text-neutral-400 cursor-not-allowed"
-                  }`}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    <>
-                      Submit ✨
-                    </>
-                  )}
-                </motion.button>
-              </motion.div>
-
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
+                <motion.h2
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mt-6 p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 text-sm"
+                  transition={{ delay: 0.2 }}
+                  className="text-3xl font-extrabold text-neutral-800 mb-3"
                 >
-                  {error}
+                  Great, {name}! 📸
+                </motion.h2>
+
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-lg text-neutral-600 mb-8"
+                >
+                  Now take your photo{" "}
+                  <span className="text-rose-500 font-semibold">*</span>
+                </motion.p>
+
+                <motion.button
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
+                  onClick={() => setShowCamera(true)}
+                  className="relative group mb-8"
+                >
+                  <div className="w-40 h-40 rounded-full overflow-hidden bg-gradient-to-br from-rose-100 to-rose-200 flex items-center justify-center relative shadow-2xl group-hover:shadow-rose-500/50 transition-all">
+                    {preview ? (
+                      <img
+                        src={preview}
+                        alt="preview"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="text-6xl font-extrabold text-rose-500">
+                        {name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Camera className="w-12 h-12 text-white" />
+                    </div>
+                  </div>
+                </motion.button>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                  className="flex gap-4"
+                >
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setStep(1)}
+                    className="px-8 py-3 rounded-full font-semibold text-neutral-600 bg-white border-2 border-neutral-200 hover:border-neutral-300 transition-all"
+                  >
+                    Back
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleNext}
+                    className="px-12 py-3 rounded-full font-bold text-white bg-rose-500 hover:bg-rose-600 shadow-xl hover:shadow-2xl transition-all flex items-center gap-2"
+                  >
+                    Continue
+                    <ArrowRight className="w-5 h-5" />
+                  </motion.button>
                 </motion.div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+              </motion.div>
+            )}
 
-      {showCamera && (
-        <div className="fixed inset-0 z-50 bg-black text-white flex flex-col">
-          <div className="relative flex-1 w-full h-full">
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="w-full h-full object-cover"
-            />
-
-            <div className="absolute top-4 left-4 right-4 flex justify-between items-center">
-              <button
-                onClick={() => setShowCamera(false)}
-                className="bg-neutral-900/60 backdrop-blur-sm p-3 rounded-full hover:bg-neutral-900/80 transition-colors"
-                aria-label="Close"
+            {/* Step 3: Question */}
+            {step === 3 && (
+              <motion.div
+                key="step3"
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -50 }}
+                transition={{ duration: 0.3 }}
+                className="flex flex-col items-center text-center"
               >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="flex gap-2">
-                <button
-                  onClick={toggleFacing}
-                  className="bg-neutral-900/60 backdrop-blur-sm p-3 rounded-full hover:bg-neutral-900/80 transition-colors"
-                  aria-label="Switch camera"
+                <motion.h2
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-3xl font-extrabold text-neutral-800 mb-3"
                 >
-                  <RotateCw className="w-5 h-5" />
+                  One last thing! 🎯
+                </motion.h2>
+
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-xl text-neutral-700 mb-12 font-medium"
+                >
+                  Do you want to see us?
+                </motion.p>
+
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="flex gap-4 mb-8"
+                >
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setWantsToSee(true)}
+                    className={`w-32 h-32 rounded-3xl font-bold text-2xl shadow-xl transition-all ${
+                      wantsToSee === true
+                        ? "bg-gradient-to-br from-rose-500 to-rose-600 text-white scale-105 shadow-rose-500/50"
+                        : "bg-white text-neutral-700 hover:bg-neutral-50"
+                    }`}
+                  >
+                    Yes 😊
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setWantsToSee(false)}
+                    className={`w-32 h-32 rounded-3xl font-bold text-2xl shadow-xl transition-all ${
+                      wantsToSee === false
+                        ? "bg-gradient-to-br from-neutral-500 to-neutral-600 text-white scale-105 shadow-neutral-500/50"
+                        : "bg-white text-neutral-700 hover:bg-neutral-50"
+                    }`}
+                  >
+                    No 🙏
+                  </motion.button>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                  className="flex gap-4"
+                >
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setStep(2)}
+                    disabled={loading}
+                    className="px-8 py-3 rounded-full font-semibold text-neutral-600 bg-white border-2 border-neutral-200 hover:border-neutral-300 transition-all disabled:opacity-50"
+                  >
+                    Back
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: canProceed() && !loading ? 1.05 : 1 }}
+                    whileTap={{ scale: canProceed() && !loading ? 0.95 : 1 }}
+                    onClick={handleNext}
+                    disabled={!canProceed() || loading}
+                    className={`px-12 py-3 rounded-full font-bold shadow-xl transition-all flex items-center gap-2 ${
+                      canProceed() && !loading
+                        ? "bg-rose-500 text-white hover:bg-rose-600 hover:shadow-2xl"
+                        : "bg-neutral-200 text-neutral-400 cursor-not-allowed"
+                    }`}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>Submit ✨</>
+                    )}
+                  </motion.button>
+                </motion.div>
+
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-6 p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 text-sm"
+                  >
+                    {error}
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+
+        {showCamera && (
+          <div className="fixed inset-0 z-50 bg-black text-white flex flex-col">
+            <div className="relative flex-1 w-full h-full">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover"
+              />
+
+              <div className="absolute top-4 left-4 right-4 flex justify-between items-center">
+                <button
+                  onClick={() => setShowCamera(false)}
+                  className="bg-neutral-900/60 backdrop-blur-sm p-3 rounded-full hover:bg-neutral-900/80 transition-colors"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5" />
                 </button>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={toggleFacing}
+                    className="bg-neutral-900/60 backdrop-blur-sm p-3 rounded-full hover:bg-neutral-900/80 transition-colors"
+                    aria-label="Switch camera"
+                  >
+                    <RotateCw className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="absolute left-0 right-0 bottom-8 flex justify-center pointer-events-auto">
+                <button
+                  onClick={capturePhoto}
+                  aria-label="Capture"
+                  className="w-20 h-20 rounded-full bg-white hover:bg-neutral-100 border-4 border-rose-500 shadow-2xl transition-all active:scale-95"
+                />
               </div>
             </div>
-
-            <div className="absolute left-0 right-0 bottom-8 flex justify-center pointer-events-auto">
-              <button
-                onClick={capturePhoto}
-                aria-label="Capture"
-                className="w-20 h-20 rounded-full bg-white hover:bg-neutral-100 border-4 border-rose-500 shadow-2xl transition-all active:scale-95"
-              />
-            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </>
   );
 }

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Check, BarChart3, Users } from "lucide-react";
+import DynamicIsland from "./DynamicIsland";
 
 interface ThankYouTabProps {
   onBackToForm: () => void;
@@ -24,13 +25,19 @@ export default function ThankYouTab({ onBackToForm }: ThankYouTabProps) {
   }));
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-      className="fixed inset-0 bg-gradient-to-br from-rose-500 via-rose-600 to-rose-700 flex items-center justify-center overflow-hidden"
-    >
+    <>
+      {/* Dynamic Island - Live Poll Counter */}
+      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
+        <DynamicIsland />
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        className="fixed inset-0 bg-gradient-to-br from-rose-500 via-rose-600 to-rose-700 flex items-center justify-center overflow-hidden"
+      >
           {/* Main Content Container */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -138,7 +145,7 @@ export default function ThankYouTab({ onBackToForm }: ThankYouTabProps) {
               transition={{ delay: 0.8, duration: 0.4, ease: "easeOut" }}
               className="flex flex-col gap-3 w-full px-4"
             >
-              <motion.button
+              {/* <motion.button
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.9, duration: 0.3 }}
@@ -148,7 +155,7 @@ export default function ThankYouTab({ onBackToForm }: ThankYouTabProps) {
                 className="w-full py-4 px-6 rounded-2xl bg-white text-rose-600 font-bold text-lg shadow-xl hover:shadow-2xl transition-shadow"
               >
                 Submit Another Response
-              </motion.button>
+              </motion.button> */}
 
               <motion.button
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -200,5 +207,6 @@ export default function ThankYouTab({ onBackToForm }: ThankYouTabProps) {
             </motion.div>
           </motion.div>
         </motion.div>
+      </>
   );
 }
