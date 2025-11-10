@@ -186,8 +186,8 @@ export default function LiveForm({ onSuccess }: LiveFormProps) {
                 className="flex flex-col items-center text-center"
               >
                 <motion.div
-                  initial={{ scale: 0, rotate: -180 }}
-                  animate={{ scale: 1, rotate: 0 }}
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
                   transition={{
                     delay: 0.1,
                     type: "spring",
