@@ -15,7 +15,7 @@ export default function ResultPage() {
 
   // Subscribe to users and compute yes count
   useEffect(() => {
-    const usersRef = ref(db, 'users');
+    const usersRef = ref(db, "users");
     const unsub = onValue(usersRef, (snapshot) => {
       const val = snapshot.val();
       if (!val) {
@@ -60,34 +60,8 @@ export default function ResultPage() {
   const yesPercentage = total > 0 ? Math.round((yesCount / total) * 100) : 0;
 
   return (
-    <main className="relative flex h-screen w-full items-center justify-center overflow-hidden bg-gradient-to-br from-rose-50 via-white to-rose-100">
-      {/* Animated background shapes */}
-      <motion.div
-        animate={{
-          scale: [1, 1.2, 1],
-          rotate: [0, 180, 360],
-        }}
-        transition={{
-          duration: 20,
-          repeat: Infinity,
-          ease: "linear",
-        }}
-        className="absolute top-10 right-10 w-64 h-64 bg-rose-200/20 rounded-full blur-3xl pointer-events-none"
-      />
-      <motion.div
-        animate={{
-          scale: [1.2, 1, 1.2],
-          rotate: [360, 180, 0],
-        }}
-        transition={{
-          duration: 15,
-          repeat: Infinity,
-          ease: "linear",
-        }}
-        className="absolute bottom-10 left-10 w-72 h-72 bg-neutral-200/30 rounded-full blur-3xl pointer-events-none"
-      />
-
-      <div className="relative z-10 flex w-full max-w-2xl flex-col items-center justify-center">
+    <main className="relative flex h-screen w-full items-center justify-center overflow-hidden bg-gradient-to-br from-rose-200 via-white to-rose-200">
+      <div className="relative z-10 flex w-full max-w-2xl flex-col items-center justify-center px-4 md:px-0">
         {/* Main Counter Card */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
@@ -151,7 +125,6 @@ export default function ResultPage() {
           >
             <div className="flex flex-col items-center gap-4">
               <div className="w-12 h-12 border-4 border-rose-500 border-t-transparent rounded-full animate-spin" />
-              <p className="text-neutral-600 font-medium">Loading statistics...</p>
             </div>
           </motion.div>
         )}
