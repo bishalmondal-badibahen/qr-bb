@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { ref, push } from "firebase/database";
 import { db } from "@/lib/firebase";
 import { compressAndUploadImage } from "@/lib/s3Upload";
+import { checkFileSafety } from "@/lib/nsfwDetection";
 import {
   Camera,
   X,
@@ -11,9 +12,13 @@ import {
   Loader2,
   RotateCw,
   Sparkles,
+  ShieldAlert,
+  Image as ImageIcon,
+  ShieldCheck,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import DynamicIsland from "./DynamicIsland";
+import { div } from "@tensorflow/tfjs-core/dist/ops/ops_for_converter";
 
 interface LiveFormProps {
   onSuccess?: () => void;
@@ -29,10 +34,12 @@ export default function LiveForm({ onSuccess }: LiveFormProps) {
   const [wantsToSee, setWantsToSee] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [checkingImage, setCheckingImage] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (!showCamera) return;
@@ -81,7 +88,34 @@ export default function LiveForm({ onSuccess }: LiveFormProps) {
   const toggleFacing = () =>
     setFacingMode((f) => (f === "user" ? "environment" : "user"));
 
-  const capturePhoto = () => {
+  const validateAndSetImage = async (file: File) => {
+    setCheckingImage(true);
+    setError(null);
+
+    try {
+      // Check if image is safe
+      const result = await checkFileSafety(file);
+
+      if (!result.isSafe) {
+        setError(result.message);
+        setCheckingImage(false);
+        return false;
+      }
+
+      // Image is safe, proceed
+      setImage(file);
+      setPreview(URL.createObjectURL(file));
+      setCheckingImage(false);
+      return true;
+    } catch (err) {
+      console.error("Error checking image:", err);
+      setError("Failed to verify image. Please try again.");
+      setCheckingImage(false);
+      return false;
+    }
+  };
+
+  const capturePhoto = async () => {
     if (!videoRef.current) return;
     const canvas = document.createElement("canvas");
     canvas.width = videoRef.current.videoWidth || 1280;
@@ -90,13 +124,15 @@ export default function LiveForm({ onSuccess }: LiveFormProps) {
     if (!ctx) return;
     ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
     canvas.toBlob(
-      (blob) => {
+      async (blob) => {
         if (!blob) return;
         const file = new File([blob], `camera_${Date.now()}.jpg`, {
           type: "image/jpeg",
         });
-        setImage(file);
-        setPreview(URL.createObjectURL(file));
+
+        // Validate image before setting
+        await validateAndSetImage(file);
+
         setShowCamera(false);
       },
       "image/jpeg",
@@ -107,6 +143,25 @@ export default function LiveForm({ onSuccess }: LiveFormProps) {
   const removeImage = () => {
     setImage(null);
     setPreview(null);
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      setError("Please select an image file");
+      return;
+    }
+
+    // Validate image
+    const isValid = await validateAndSetImage(file);
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const handleSubmit = async () => {
@@ -293,12 +348,59 @@ export default function LiveForm({ onSuccess }: LiveFormProps) {
                   <span className="text-rose-500 font-semibold">*</span>
                 </motion.p>
 
+                {/* Hidden file input */}
+                {/* <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                /> */}
+
+                {/* Checking Image State */}
+                {checkingImage && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="mb-6 p-4 rounded-2xl bg-blue-50 border-2 border-blue-200 flex items-center gap-3"
+                  >
+                    <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
+                    <div className="flex items-center gap-2">
+                      <ShieldAlert className="w-5 h-5 text-blue-600" />
+                      <span className="text-blue-700 font-medium">
+                        Checking image safety...
+                      </span>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Error Display */}
+                {error && !checkingImage && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="mb-6 p-4 rounded-2xl bg-red-50 border-2 border-red-200 flex items-start gap-3"
+                  >
+                    <ShieldAlert className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-red-700 font-medium">{error}</p>
+                      <button
+                        onClick={() => setError(null)}
+                        className="text-sm text-red-600 hover:text-red-700 underline mt-1"
+                      >
+                        Dismiss
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+
                 <motion.button
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
                   onClick={() => setShowCamera(true)}
-                  className="relative group mb-8"
+                  disabled={checkingImage}
+                  className="relative group mb-6 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <div className="w-40 h-40 rounded-full overflow-hidden bg-gradient-to-br from-rose-100 to-rose-200 flex items-center justify-center relative shadow-2xl group-hover:shadow-rose-500/50 transition-all">
                     {preview ? (
@@ -318,6 +420,30 @@ export default function LiveForm({ onSuccess }: LiveFormProps) {
                     </div>
                   </div>
                 </motion.button>
+
+                {/* Or upload from gallery */}
+                {/* <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="mb-8 flex items-center gap-3"
+                >
+                  <div className="h-px bg-neutral-300 flex-1"></div>
+                  <span className="text-sm text-neutral-500">or</span>
+                  <div className="h-px bg-neutral-300 flex-1"></div>
+                </motion.div>
+
+                <motion.button
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.55 }}
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={checkingImage}
+                  className="mb-8 px-6 py-3 rounded-full font-semibold text-rose-600 bg-white border-2 border-rose-200 hover:border-rose-300 hover:bg-rose-50 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ImageIcon className="w-5 h-5" />
+                  Choose from Gallery
+                </motion.button> */}
 
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -459,43 +585,56 @@ export default function LiveForm({ onSuccess }: LiveFormProps) {
 
         {showCamera && (
           <div className="fixed inset-0 z-50 bg-black text-white flex flex-col">
-            <div className="relative flex-1 w-full h-full">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full h-full object-cover"
-              />
-
-              <div className="absolute top-4 left-4 right-4 flex justify-between items-center">
-                <button
-                  onClick={() => setShowCamera(false)}
-                  className="bg-neutral-900/60 backdrop-blur-sm p-3 rounded-full hover:bg-neutral-900/80 transition-colors"
-                  aria-label="Close"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={toggleFacing}
-                    className="bg-neutral-900/60 backdrop-blur-sm p-3 rounded-full hover:bg-neutral-900/80 transition-colors"
-                    aria-label="Switch camera"
-                  >
-                    <RotateCw className="w-5 h-5" />
-                  </button>
+            {checkingImage ? (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="mb-4">
+                    <ShieldCheck className="w-12 h-12 animate-spin mx-auto text-rose-500" />
+                  </div>
+                  <p className="text-lg font-semibold">
+                    Checking image safety...
+                  </p>
                 </div>
               </div>
-
-              <div className="absolute left-0 right-0 bottom-8 flex justify-center pointer-events-auto">
-                <button
-                  onClick={capturePhoto}
-                  aria-label="Capture"
-                  className="w-20 h-20 rounded-full bg-white hover:bg-neutral-100 border-4 border-rose-500 shadow-2xl transition-all active:scale-95"
+            ) : (
+              <div className="relative flex-1 w-full h-full">
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-full object-cover"
                 />
+
+                <div className="absolute top-4 left-4 right-4 flex justify-between items-center">
+                  <button
+                    onClick={() => setShowCamera(false)}
+                    className="bg-neutral-900/60 backdrop-blur-sm p-3 rounded-full hover:bg-neutral-900/80 transition-colors"
+                    aria-label="Close"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={toggleFacing}
+                      className="bg-neutral-900/60 backdrop-blur-sm p-3 rounded-full hover:bg-neutral-900/80 transition-colors"
+                      aria-label="Switch camera"
+                    >
+                      <RotateCw className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="absolute left-0 right-0 bottom-8 flex justify-center pointer-events-auto">
+                  <button
+                    onClick={capturePhoto}
+                    aria-label="Capture"
+                    className="w-20 h-20 rounded-full bg-white hover:bg-neutral-100 border-4 border-rose-500 shadow-2xl transition-all active:scale-95"
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
       </div>

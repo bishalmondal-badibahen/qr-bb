@@ -121,7 +121,7 @@ export default function ResultPage() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm rounded-3xl"
+            className="absolute inset-0 flex items-center justify-center bg-white/10 backdrop-blur-sm rounded-3xl"
           >
             <div className="flex flex-col items-center gap-4">
               <div className="w-12 h-12 border-4 border-rose-500 border-t-transparent rounded-full animate-spin" />

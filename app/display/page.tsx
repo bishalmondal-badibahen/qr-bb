@@ -16,10 +16,9 @@ export default function DisplayPage() {
   const [users, setUsers] = useState<UserEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Detect screen size for responsive columns, gap, and speed
+  // Detect screen size for responsive columns and gap
   const [columns, setColumns] = useState(4);
   const [gap, setGap] = useState(16);
-  const [speed, setSpeed] = useState(40);
   const [cardScale, setCardScale] = useState(1);
 
   // Dynamic columns and card sizing based on item count
@@ -31,56 +30,47 @@ export default function DisplayPage() {
       // Base columns from screen width
       let baseColumns = 4;
       let baseGap = 16;
-      let baseSpeed = 40;
       let maxColumns = 6;
 
       if (width >= 3840) {
         // 4K displays
         baseColumns = 8;
         baseGap = 24;
-        baseSpeed = 60;
         maxColumns = 12;
       } else if (width >= 2560) {
         // 2K displays
         baseColumns = 7;
         baseGap = 22;
-        baseSpeed = 55;
         maxColumns = 10;
       } else if (width >= 1920) {
         // Large desktop
         baseColumns = 6;
         baseGap = 20;
-        baseSpeed = 50;
         maxColumns = 8;
       } else if (width >= 1536) {
         // Desktop XL
         baseColumns = 5;
         baseGap = 18;
-        baseSpeed = 45;
         maxColumns = 7;
       } else if (width >= 1280) {
         // Desktop
         baseColumns = 4;
         baseGap = 16;
-        baseSpeed = 40;
         maxColumns = 6;
       } else if (width >= 1024) {
         // Laptop
         baseColumns = 3;
         baseGap = 14;
-        baseSpeed = 35;
         maxColumns = 4;
       } else if (width >= 768) {
         // Tablet
         baseColumns = 2;
         baseGap = 12;
-        baseSpeed = 30;
         maxColumns = 3;
       } else {
         // Mobile
         baseColumns = 1;
         baseGap = 10;
-        baseSpeed = 25;
         maxColumns = 2;
       }
 
@@ -109,7 +99,7 @@ export default function DisplayPage() {
       // Calculate final columns (but don't exceed max)
       const finalColumns = Math.min(
         baseColumns + additionalColumns,
-        maxColumns,
+        maxColumns
       );
 
       // Calculate minimum card width to ensure visibility
@@ -126,11 +116,10 @@ export default function DisplayPage() {
 
       setColumns(adjustedColumns);
       setGap(baseGap);
-      setSpeed(baseSpeed);
       setCardScale(scale);
 
       console.log(
-        `Display settings: ${itemCount} items → ${adjustedColumns} columns (base: ${baseColumns}, scale: ${scale})`,
+        `Display settings: ${itemCount} items → ${adjustedColumns} columns (base: ${baseColumns}, scale: ${scale})`
       );
     };
 
@@ -183,10 +172,12 @@ export default function DisplayPage() {
         name: user.name,
         img:
           user.imageURL ||
-          `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&size=600&background=random&bold=true`,
+          `https://ui-avatars.com/api/?name=${encodeURIComponent(
+            user.name
+          )}&size=600&background=random&bold=true`,
         timestamp: user.timestamp,
       })),
-    [users],
+    [users]
   );
 
   if (loading) {
@@ -206,37 +197,39 @@ export default function DisplayPage() {
   }
 
   return (
-    <div className="h-screen w-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-950 overflow-hidden fixed inset-0">
+    <div className="h-screen w-screen bg-gradient-to-br from-white via-rose-100 to-rose-200 overflow-hidden fixed inset-0">
       {users.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-screen text-center px-4">
-          <div className="relative mb-8 animate-fade-in">
-            <div className="h-32 w-32 rounded-full bg-gradient-to-br from-rose-500/20 to-rose-600/20 flex items-center justify-center">
-              <svg
-                className="h-16 w-16 text-rose-500/60"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
+          <div className="flex flex-col items-center justify-center text-center bg-black/20 rounded-2xl p-4 shadow-2xl backdrop-blur-2xl">
+            <div className="relative mb-8 animate-fade-in">
+              <div className="h-32 w-32 rounded-full bg-gradient-to-br from-rose-100 to-rose-200 flex items-center justify-center">
+                <svg
+                  className="h-16 w-16 text-rose-500/60"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
+              </div>
+              <div className="absolute inset-0 h-32 w-32 rounded-full bg-rose-500/10 blur-3xl animate-pulse" />
             </div>
-            <div className="absolute inset-0 h-32 w-32 rounded-full bg-rose-500/10 blur-3xl animate-pulse" />
+            <p className="text-3xl font-semibold text-white mb-3 animate-fade-in">
+              No entries yet
+            </p>
+            <p
+              className="text-white/60 max-w-md text-lg animate-fade-in"
+              style={{ animationDelay: "0.1s" }}
+            >
+              Waiting for entries to appear. They will be displayed here in
+              real-time with animated columns.
+            </p>
           </div>
-          <p className="text-3xl font-semibold text-white mb-3 animate-fade-in">
-            No entries yet
-          </p>
-          <p
-            className="text-white/60 max-w-md text-lg animate-fade-in"
-            style={{ animationDelay: "0.1s" }}
-          >
-            Waiting for entries to appear. They will be displayed here in
-            real-time with animated columns.
-          </p>
         </div>
       ) : (
         <div className="h-full w-full transition-all duration-500 ease-in-out">
@@ -244,7 +237,6 @@ export default function DisplayPage() {
             items={animatedItems}
             columns={columns}
             gap={gap}
-            speed={speed}
             pauseOnHover={true}
             cardScale={cardScale}
           />

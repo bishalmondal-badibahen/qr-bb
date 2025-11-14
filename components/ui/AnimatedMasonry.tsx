@@ -1,6 +1,13 @@
+// AnimatedMasonry.tsx
 "use client";
 
-import React, { useMemo, useState, useRef, useEffect } from "react";
+import React, {
+  useMemo,
+  useState,
+  useRef,
+  useEffect,
+  memo,
+} from "react";
 import { motion } from "framer-motion";
 
 interface AnimatedItem {
@@ -14,244 +21,296 @@ interface AnimatedMasonryProps {
   items: AnimatedItem[];
   columns?: number;
   gap?: number;
-  speed?: number;
+  speed?: number; // seconds for a full loop
   pauseOnHover?: boolean;
   cardScale?: number;
 }
 
-const MasonryColumn = React.memo<{
-  columnItems: AnimatedItem[];
-  colIndex: number;
-  gap: number;
-  speed: number;
-  pauseOnHover: boolean;
-  cardScale: number;
-}>(({ columnItems, colIndex, gap, speed, pauseOnHover, cardScale }) => {
-  const [isPaused, setIsPaused] = useState(false);
-  const [newItemIds, setNewItemIds] = useState<Set<string>>(new Set());
-  const prevItemIdsRef = useRef<Set<string>>(new Set());
-  const direction = colIndex % 2 === 0 ? -1 : 1;
+// Constant slower speed - smooth and comfortable for viewing
+const CONSTANT_SPEED = 90; // seconds for a full loop - slower, more readable
 
-  useEffect(() => {
-    const currentIds = new Set(columnItems.map(item => item.id));
-    const prevIds = prevItemIdsRef.current;
-    const newIds = new Set<string>();
+const idsKey = (arr: AnimatedItem[]) => arr.map((i) => i.id).join("|");
 
-    currentIds.forEach(id => {
-      if (!prevIds.has(id)) {
-        newIds.add(id);
-      }
-    });
+// ----------------------------------------
+// ItemCard (Memoized)
+// ----------------------------------------
+const ItemCard = memo(
+  function ItemCard({
+    item,
+    isNew,
+    isFirstOccurrence,
+    gap,
+    cardScale,
+    shouldBeWide,
+  }: {
+    item: AnimatedItem;
+    isNew: boolean;
+    isFirstOccurrence: boolean;
+    gap: number;
+    cardScale: number;
+    shouldBeWide: boolean;
+  }) {
+    const itemSeed = item.id
+      .split("")
+      .reduce((acc, char) => acc + char.charCodeAt(0), 0);
 
-    if (newIds.size > 0) {
-      setNewItemIds(prev => new Set([...prev, ...newIds]));
-      // Clear the highlight after animation completes
-      setTimeout(() => {
-        setNewItemIds(current => {
-          const updated = new Set(current);
-          newIds.forEach(id => updated.delete(id));
-          return updated;
-        });
-      }, 3000);
-    }
+    const heightVariants = [180, 240, 300, 380, 460, 220, 340, 420, 280, 360];
+    const heightIndex = itemSeed % heightVariants.length;
+    const height = heightVariants[heightIndex] * cardScale;
 
-    prevItemIdsRef.current = currentIds;
-  }, [columnItems]);
-
-  // Always triple items for infinite scroll
-  const loopedItems = useMemo(
-    () => [...columnItems, ...columnItems, ...columnItems],
-    [columnItems]
-  );
-
-  return (
-    <motion.div
-      className="flex-1 relative overflow-hidden"
-      onMouseEnter={() => pauseOnHover && setIsPaused(true)}
-      onMouseLeave={() => pauseOnHover && setIsPaused(false)}
-    >
+    return (
       <motion.div
-        animate={{
-          y: direction === -1 ? [0, "-33.333%"] : ["-33.333%", 0],
-        }}
+        key={item.id}
+        initial={
+          isNew && isFirstOccurrence
+            ? { opacity: 0, scale: 0.9, y: 40 }
+            : undefined
+        }
+        animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{
-          duration: speed,
-          repeat: Infinity,
-          ease: "linear",
-          delay: colIndex * 0.5,
+          duration: 1.2,
+          ease: [0.22, 1, 0.36, 1],
         }}
+        whileHover={{ scale: 1.05 }}
+        className="rounded-2xl overflow-hidden shadow-xl relative group cursor-pointer"
         style={{
-          animationPlayState: isPaused ? "paused" : "running",
+          height: `${height}px`,
+          marginBottom: `${gap}px`,
+          width: shouldBeWide ? `calc(200% + ${gap}px)` : "100%",
         }}
       >
-        {loopedItems.map((item, itemIndex) => {
-          // Create varied sizes based on item ID for consistency
-          const itemSeed = item.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        <img
+          src={item.img}
+          alt={item.name}
+          className="w-full h-full object-cover"
+          loading="lazy"
+        />
+        {/* overlays */}
+        <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/95 via-neutral-900/50 to-transparent pointer-events-none" />
 
-          // Height variations: small, medium, large, extra-large, tall, very tall
-          // More variety for dynamic bento grid effect
-          const heightVariants = [
-            180,  // compact
-            240,  // small
-            300,  // medium
-            380,  // large
-            460,  // extra-large
-            220,  // short-medium
-            340,  // medium-large
-            420,  // tall
-            280,  // small-medium
-            360,  // medium-tall
-          ];
-          const heightIndex = itemSeed % heightVariants.length;
-          const height = heightVariants[heightIndex] * cardScale;
+        <div
+          className="absolute bottom-0 left-0 right-0 transition-all duration-300"
+          style={{ padding: `${Math.max(8, 16 * cardScale)}px` }}
+        >
+          <p
+            className="text-white font-bold drop-shadow-2xl line-clamp-2"
+            style={{ fontSize: `${Math.max(14, 18 * cardScale)}px` }}
+          >
+            {item.name}
+          </p>
+          <p
+            className="text-white/70 drop-shadow-lg mt-1"
+            style={{ fontSize: `${Math.max(10, 12 * cardScale)}px` }}
+          >
+            {new Date(item.timestamp).toLocaleDateString()}
+          </p>
+        </div>
 
-          // Width variations for bento grid effect
-          // Some items span wider occasionally for visual interest
-          const shouldBeWide = itemSeed % 8 === 0; // ~12.5% chance of being wide
-
-          const isNewItem = newItemIds.has(item.id);
-          // Only animate the first occurrence of each new item
-          const isFirstOccurrence = itemIndex < columnItems.length;
-
-          return (
-            <motion.div
-              key={`${item.id}-${itemIndex}`}
-              initial={isNewItem && isFirstOccurrence ? {
-                opacity: 0,
-                scale: 0.9,
-                y: 40,
-              } : false}
-              animate={{
-                opacity: 1,
-                scale: 1,
-                y: 0,
-              }}
-              transition={{
-                duration: 1.5,
-                ease: [0.22, 1, 0.36, 1],
-                opacity: {
-                  duration: 1.0,
-                  ease: "easeOut"
-                },
-                scale: {
-                  duration: 1.5,
-                  ease: [0.22, 1, 0.36, 1]
-                },
-                y: {
-                  duration: 1.2,
-                  ease: [0.22, 1, 0.36, 1]
-                }
-              }}
-              whileHover={{ scale: 1.05 }}
-              className={`rounded-2xl overflow-hidden shadow-xl relative group cursor-pointer ${
-                shouldBeWide ? 'col-span-2' : ''
-              }`}
-              style={{
-                height: `${height}px`,
-                marginBottom: `${gap}px`,
-                width: shouldBeWide ? `calc(200% + ${gap}px)` : '100%',
-              }}
-            >
-              <img
-                src={item.img}
-                alt={item.name}
-                className="w-full h-full object-cover"
-                loading="lazy"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/95 via-neutral-900/50 to-transparent pointer-events-none" />
-              <div
-                className="absolute bottom-0 left-0 right-0 transition-all duration-300"
-                style={{ padding: `${Math.max(8, 16 * cardScale)}px` }}
-              >
-                <p
-                  className="text-white font-bold drop-shadow-2xl line-clamp-2"
-                  style={{
-                    fontSize: `${Math.max(14, 18 * cardScale)}px`,
-                  }}
-                >
-                  {item.name}
-                </p>
-                <p
-                  className="text-white/70 drop-shadow-lg mt-1"
-                  style={{
-                    fontSize: `${Math.max(10, 12 * cardScale)}px`,
-                  }}
-                >
-                  {new Date(item.timestamp).toLocaleDateString()}
-                </p>
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-br from-rose-500/30 via-rose-600/20 to-rose-700/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-              <div className="absolute inset-0 ring-2 ring-rose-500/0 group-hover:ring-rose-500/60 rounded-2xl transition-all duration-300" />
-              {isNewItem && isFirstOccurrence && (
-                <motion.div
-                  initial={{ opacity: 1 }}
-                  animate={{ opacity: 0 }}
-                  transition={{
-                    duration: 3.0,
-                    ease: "easeOut",
-                  }}
-                  className="absolute inset-0 ring-4 ring-rose-500/90 rounded-2xl pointer-events-none shadow-2xl shadow-rose-500/50"
-                />
-              )}
-            </motion.div>
-          );
-        })}
+        {isNew && isFirstOccurrence && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 0 }}
+            transition={{
+              duration: 2.5,
+              ease: "easeOut",
+            }}
+            className="absolute inset-0 ring-4 ring-rose-500/90 rounded-2xl pointer-events-none shadow-2xl shadow-rose-500/50"
+          />
+        )}
       </motion.div>
-    </motion.div>
-  );
-}, (prevProps, nextProps) => {
-  if (prevProps.columnItems.length !== nextProps.columnItems.length) return false;
-  if (prevProps.gap !== nextProps.gap) return false;
-  if (prevProps.speed !== nextProps.speed) return false;
-  if (prevProps.cardScale !== nextProps.cardScale) return false;
-  if (prevProps.pauseOnHover !== nextProps.pauseOnHover) return false;
+    );
+  },
+  (prev, next) =>
+    prev.item.id === next.item.id &&
+    prev.isNew === next.isNew &&
+    prev.isFirstOccurrence === next.isFirstOccurrence &&
+    prev.gap === next.gap &&
+    prev.cardScale === next.cardScale &&
+    prev.shouldBeWide === next.shouldBeWide
+);
 
-  const prevIds = prevProps.columnItems;
-  const nextIds = nextProps.columnItems;
+// ----------------------------------------
+// MasonryColumn
+// ----------------------------------------
+const MasonryColumn = memo(
+  function MasonryColumn({
+    columnItems,
+    colIndex,
+    gap,
+    speed,
+    pauseOnHover,
+    cardScale,
+  }: {
+    columnItems: AnimatedItem[];
+    colIndex: number;
+    gap: number;
+    speed: number;
+    pauseOnHover: boolean;
+    cardScale: number;
+  }) {
+    const [isPaused, setIsPaused] = useState(false);
+    const prevIdsRef = useRef<string>("");
+    const [newItemIds, setNewItemIds] = useState<Set<string>>(new Set());
 
-  for (let i = 0; i < prevIds.length; i++) {
-    if (prevIds[i].id !== nextIds[i].id) {
-      return false;
+    // detect new items
+    useEffect(() => {
+      const key = idsKey(columnItems);
+      const prev = prevIdsRef.current;
+
+      if (prev !== key) {
+        const prevSet = new Set(prev.split("|").filter(Boolean));
+        const currSet = new Set(columnItems.map((i) => i.id));
+        const diff = new Set<string>();
+
+        currSet.forEach((id) => {
+          if (!prevSet.has(id)) diff.add(id);
+        });
+
+        if (diff.size > 0) {
+          setNewItemIds((p) => {
+            const next = new Set(p);
+            diff.forEach((i) => next.add(i));
+            return next;
+          });
+
+          const t = setTimeout(() => {
+            setNewItemIds((p) => {
+              const next = new Set(p);
+              diff.forEach((i) => next.delete(i));
+              return next;
+            });
+          }, 2500);
+
+          return () => clearTimeout(t);
+        }
+      }
+
+      prevIdsRef.current = key;
+    }, [columnItems]);
+
+    // triple list only if we have multiple items, otherwise just show once
+    const loopedItems = useMemo(() => {
+      // If there's only 1 item in this column and it's the only column with data,
+      // don't triple it to avoid duplicates
+      if (columnItems.length === 1) {
+        return columnItems;
+      }
+      return [...columnItems, ...columnItems, ...columnItems];
+    }, [columnItems]);
+
+    const direction = colIndex % 2 === 0 ? -1 : 1;
+    const shouldAnimate = columnItems.length > 1;
+
+    return (
+      <div
+        className="flex-1 relative overflow-hidden"
+        onMouseEnter={() => pauseOnHover && setIsPaused(true)}
+        onMouseLeave={() => pauseOnHover && setIsPaused(false)}
+      >
+        <div
+          className="masonry-scroller"
+          style={{
+            animationName: shouldAnimate ? "masonry-scroll" : "none",
+            animationDuration: `${speed}s`,
+            animationTimingFunction: "linear",
+            animationIterationCount: "infinite",
+            animationDirection: direction === -1 ? "normal" : "reverse",
+            animationDelay: `${colIndex * 0.35}s`,
+            animationPlayState: isPaused ? "paused" : "running",
+          }}
+        >
+          {loopedItems.map((item, idx) => {
+            const seed = item.id
+              .split("")
+              .reduce((a, c) => a + c.charCodeAt(0), 0);
+
+            return (
+              <ItemCard
+                key={`${item.id}-${idx}`}
+                item={item}
+                isNew={newItemIds.has(item.id)}
+                isFirstOccurrence={idx < columnItems.length}
+                gap={gap}
+                cardScale={cardScale}
+                shouldBeWide={seed % 8 === 0}
+              />
+            );
+          })}
+        </div>
+
+        <style jsx>{`
+          @keyframes masonry-scroll {
+            0% {
+              transform: translateY(0);
+            }
+            100% {
+              transform: translateY(-33.333%);
+            }
+          }
+          .masonry-scroller {
+            will-change: transform;
+          }
+        `}</style>
+      </div>
+    );
+  },
+  (prev, next) => {
+    if (prev.gap !== next.gap) return false;
+    if (prev.speed !== next.speed) return false;
+    if (prev.cardScale !== next.cardScale) return false;
+    if (prev.pauseOnHover !== next.pauseOnHover) return false;
+
+    if (prev.columnItems === next.columnItems) return true;
+
+    if (prev.columnItems.length !== next.columnItems.length) return false;
+
+    for (let i = 0; i < prev.columnItems.length; i++) {
+      if (prev.columnItems[i].id !== next.columnItems[i].id) return false;
     }
-  }
 
-  return true;
-});
+    return true;
+  }
+);
 
 MasonryColumn.displayName = "MasonryColumn";
 
-const AnimatedMasonry: React.FC<AnimatedMasonryProps> = React.memo(
+// ----------------------------------------
+// Main AnimatedMasonry Component
+// ----------------------------------------
+const AnimatedMasonry: React.FC<AnimatedMasonryProps> = memo(
   ({
     items,
     columns = 4,
     gap = 16,
-    speed = 30,
+    speed = CONSTANT_SPEED,
     pauseOnHover = true,
     cardScale = 1,
   }) => {
     const columnDataRef = useRef<Map<number, AnimatedItem[]>>(new Map());
 
+    // Override speed prop with constant speed for consistent animation
+    const finalSpeed = CONSTANT_SPEED;
+
     const columnData = useMemo(() => {
-      if (items.length === 0) return [];
+      const cols: AnimatedItem[][] = Array.from({ length: columns }, () => []);
+
+      items.forEach((item, idx) => cols[idx % columns].push(item));
 
       const prevMap = columnDataRef.current;
       const newMap = new Map<number, AnimatedItem[]>();
-      const cols: AnimatedItem[][] = Array.from({ length: columns }, () => []);
-
-      items.forEach((item, index) => {
-        cols[index % columns].push(item);
-      });
-
       const result: AnimatedItem[][] = [];
+
       for (let i = 0; i < columns; i++) {
         const newCol = cols[i];
-        const prevCol = prevMap.get(i);
+        const prev = prevMap.get(i);
 
-        if (prevCol &&
-            prevCol.length === newCol.length &&
-            prevCol.every((item, idx) => item.id === newCol[idx].id)) {
-          result.push(prevCol);
-          newMap.set(i, prevCol);
+        if (
+          prev &&
+          prev.length === newCol.length &&
+          prev.every((it, idx) => it.id === newCol[idx].id)
+        ) {
+          result.push(prev);
+          newMap.set(i, prev);
         } else {
           result.push(newCol);
           newMap.set(i, newCol);
@@ -262,27 +321,19 @@ const AnimatedMasonry: React.FC<AnimatedMasonryProps> = React.memo(
       return result;
     }, [items, columns]);
 
-    if (items.length === 0) {
-      return (
-        <div className="flex items-center justify-center h-full w-full">
-          <p className="text-white/60 text-lg">No items to display</p>
-        </div>
-      );
-    }
-
     return (
       <div className="w-full h-full overflow-hidden">
         <div
           className="flex h-full"
           style={{ gap: `${gap}px`, padding: `0 ${gap}px` }}
         >
-          {columnData.map((columnItems, colIndex) => (
+          {columnData.map((colItems, colIndex) => (
             <MasonryColumn
               key={`col-${colIndex}`}
-              columnItems={columnItems}
+              columnItems={colItems}
               colIndex={colIndex}
               gap={gap}
-              speed={speed}
+              speed={finalSpeed}
               pauseOnHover={pauseOnHover}
               cardScale={cardScale}
             />
