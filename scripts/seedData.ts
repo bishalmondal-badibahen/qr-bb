@@ -99,9 +99,11 @@ function generateFakeUser(index: number): {
 async function addEntry(
   entry: ReturnType<typeof generateFakeUser>,
 ): Promise<void> {
-  const usersRef = ref(db, "users");
-  const newUserRef = push(usersRef);
-  await set(newUserRef, entry);
+  await fetch("http://localhost:3000/api/addUser", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(entry),
+  });
 }
 
 /**

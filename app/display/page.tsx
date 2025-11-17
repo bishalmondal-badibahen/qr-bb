@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import { ref, onValue } from "firebase/database";
 import { db } from "@/lib/firebase";
 import AnimatedMasonry from "@/components/ui/AnimatedMasonry";
+import TypingText from "@/components/ui/Typingtext";
 
 type UserEntry = {
   id: string;
@@ -99,7 +100,7 @@ export default function DisplayPage() {
       // Calculate final columns (but don't exceed max)
       const finalColumns = Math.min(
         baseColumns + additionalColumns,
-        maxColumns
+        maxColumns,
       );
 
       // Calculate minimum card width to ensure visibility
@@ -119,7 +120,7 @@ export default function DisplayPage() {
       setCardScale(scale);
 
       console.log(
-        `Display settings: ${itemCount} items → ${adjustedColumns} columns (base: ${baseColumns}, scale: ${scale})`
+        `Display settings: ${itemCount} items → ${adjustedColumns} columns (base: ${baseColumns}, scale: ${scale})`,
       );
     };
 
@@ -173,16 +174,16 @@ export default function DisplayPage() {
         img:
           user.imageURL ||
           `https://ui-avatars.com/api/?name=${encodeURIComponent(
-            user.name
+            user.name,
           )}&size=600&background=random&bold=true`,
         timestamp: user.timestamp,
       })),
-    [users]
+    [users],
   );
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-rose-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-white to-rose-300 flex items-center justify-center">
         <div className="flex flex-col items-center space-y-6 animate-fade-in">
           <div className="relative">
             <div className="h-20 w-20 rounded-full border-4 border-rose-500/30 border-t-rose-500 animate-spin" />
@@ -197,39 +198,28 @@ export default function DisplayPage() {
   }
 
   return (
-    <div className="h-screen w-screen bg-gradient-to-br from-white via-rose-100 to-rose-200 overflow-hidden fixed inset-0">
+    <div className="h-screen w-screen bg-gradient-to-br from-neutral-200 to-rose-300 overflow-hidden fixed inset-0">
       {users.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-screen text-center px-4">
-          <div className="flex flex-col items-center justify-center text-center bg-black/20 rounded-2xl p-4 shadow-2xl backdrop-blur-2xl">
-            <div className="relative mb-8 animate-fade-in">
-              <div className="h-32 w-32 rounded-full bg-gradient-to-br from-rose-100 to-rose-200 flex items-center justify-center">
-                <svg
-                  className="h-16 w-16 text-rose-500/60"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
-                </svg>
-              </div>
-              <div className="absolute inset-0 h-32 w-32 rounded-full bg-rose-500/10 blur-3xl animate-pulse" />
-            </div>
-            <p className="text-3xl font-semibold text-white mb-3 animate-fade-in">
-              No entries yet
-            </p>
-            <p
-              className="text-white/60 max-w-md text-lg animate-fade-in"
-              style={{ animationDelay: "0.1s" }}
-            >
-              Waiting for entries to appear. They will be displayed here in
-              real-time with animated columns.
-            </p>
-          </div>
+          <TypingText
+            text={[
+              "Your financial बड़ी बहन",
+              "Finance for every family",
+              "Finances for a stress-free life",
+              "Money, made simple",
+              "Plan your future",
+              "Your goals, sorted",
+              "Invest with clarity",
+            ]}
+            typingSpeed={75}
+            pauseDuration={1500}
+            showCursor={true}
+            className="text-4xl xl:text-5xl font-bold text-center max-w-2xl"
+            cursorClassName="h-[2.5rem]"
+            hideCursorWhileTyping
+            textColors={["#ff2056"]}
+            variableSpeed={{ min: 50, max: 120 }}
+          />
         </div>
       ) : (
         <div className="h-full w-full transition-all duration-500 ease-in-out">
@@ -242,19 +232,6 @@ export default function DisplayPage() {
           />
         </div>
       )}
-
-      {/* Ambient Background Effects - Rose Theme */}
-      <div className="fixed inset-0 pointer-events-none -z-10">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-rose-500/5 rounded-full blur-3xl animate-pulse" />
-        <div
-          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-rose-600/5 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "1s", animationDuration: "4s" }}
-        />
-        <div
-          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-rose-700/5 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "2s", animationDuration: "5s" }}
-        />
-      </div>
     </div>
   );
 }
