@@ -224,7 +224,10 @@ export default function DynamicIslandThankYou() {
               <motion.div
                 className="flex flex-col items-center gap-1.5"
                 initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: isExpanded ? 1 : 0, x: isExpanded ? 0 : -20 }}
+                animate={{
+                  opacity: isExpanded ? 1 : 0,
+                  x: isExpanded ? 0 : -20,
+                }}
                 transition={{ duration: 0.3, delay: 0.1 }}
               >
                 <div className="flex items-center gap-2">
@@ -265,7 +268,10 @@ export default function DynamicIslandThankYou() {
               <motion.div
                 className="flex flex-col items-center gap-1.5"
                 initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: isExpanded ? 1 : 0, x: isExpanded ? 0 : 20 }}
+                animate={{
+                  opacity: isExpanded ? 1 : 0,
+                  x: isExpanded ? 0 : 20,
+                }}
                 transition={{ duration: 0.3, delay: 0.1 }}
               >
                 <div className="flex items-center gap-2">

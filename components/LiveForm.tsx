@@ -14,9 +14,12 @@ import {
   ShieldAlert,
   Image as ImageIcon,
   ShieldCheck,
+  Cross,
+  CrossIcon,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import DynamicIsland from "./DynamicIsland";
+import Image from "next/image";
 
 interface LiveFormProps {
   onSuccess?: () => void;
@@ -283,35 +286,206 @@ export default function LiveForm({ onSuccess }: LiveFormProps) {
                     stiffness: 150,
                     damping: 10,
                   }}
-                  className="mb-8"
+                  className="mb-16"
                 >
                   <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-br from-rose-400 to-rose-600 rounded-2xl blur-xl opacity-40"></div>
-                    <img
+                    <Image
                       src="/logo.png"
                       alt="Logo"
+                      width={100}
+                      height={100}
                       className="relative w-24 h-24 object-contain mx-auto drop-shadow-lg"
                     />
                   </div>
                 </motion.div>
-
                 <motion.h1
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.18 }}
                   className="text-4xl md:text-5xl font-black bg-gradient-to-r from-rose-600 to-rose-500 bg-clip-text text-transparent mb-3"
                 >
-                  Quick Poll ✨
+                  We need your vote
+                </motion.h1>
+
+                <motion.h1
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.18 }}
+                  className="text-3xl md:text-4xl font-black bg-gradient-to-r from-rose-600 to-rose-500 bg-clip-text text-transparent mb-3"
+                >
+                  To Nominate us in FMC 2025
                 </motion.h1>
 
                 <motion.p
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.28 }}
-                  className="text-lg text-neutral-600 mb-12 font-medium"
+                  className="text-2xl text-neutral-600 mb-6 font-medium"
                 >
-                  Let's start with your name
+                  Just your name
                 </motion.p>
+
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="relative flex items-center justify-center gap-6 mb-12 h-24"
+                >
+                  {/* Email Tag - Tilted Left, Floating */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -50, rotate: -15 }}
+                    animate={{
+                      opacity: 1,
+                      x: 0,
+                      rotate: -8,
+                      y: [0, -8, 0],
+                    }}
+                    transition={{
+                      opacity: { delay: 0.4, duration: 0.5 },
+                      x: { delay: 0.4, duration: 0.5 },
+                      rotate: { delay: 0.4, duration: 0.5 },
+                      y: {
+                        delay: 1,
+                        duration: 2.5,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      },
+                    }}
+                    whileHover={{
+                      rotate: -12,
+                      scale: 1.1,
+                      y: -12,
+                    }}
+                    className="group relative cursor-pointer"
+                  >
+                    {/* Badge with strikethrough effect */}
+                    <div className="relative flex items-center gap-2 px-5 py-3 bg-gradient-to-br from-rose-100 via-pink-50 to-rose-50 border-2 border-rose-400 rounded-2xl shadow-xl">
+                      <motion.div
+                        animate={{
+                          rotate: [0, 15, -15, 0],
+                          scale: [1, 1.2, 1],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      >
+                        <X
+                          className="w-5 h-5 text-rose-600 font-bold"
+                          strokeWidth={3}
+                        />
+                      </motion.div>
+                      <span className="text-sm font-bold text-rose-700 relative">
+                        <span className="">Email</span>
+                        <motion.div
+                          animate={{ scaleX: [0, 1] }}
+                          transition={{ delay: 0.8, duration: 0.4 }}
+                          className="absolute inset-0 bg-rose-500/20 rounded"
+                        />
+                      </span>
+                      {/* Small sparkle */}
+                      <motion.span
+                        animate={{
+                          scale: [0, 1, 0],
+                          rotate: [0, 180, 360],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          delay: 0.5,
+                        }}
+                        className="absolute -top-2 -right-2 text-rose-400"
+                      >
+                        ✨
+                      </motion.span>
+                    </div>
+                  </motion.div>
+
+                  {/* Phone Tag - Tilted Right, Different Height */}
+                  <motion.div
+                    initial={{ opacity: 0, x: 50, rotate: 15 }}
+                    animate={{
+                      opacity: 1,
+                      x: 0,
+                      rotate: 8,
+                      y: [0, 10, 0],
+                    }}
+                    transition={{
+                      opacity: { delay: 0.5, duration: 0.5 },
+                      x: { delay: 0.5, duration: 0.5 },
+                      rotate: { delay: 0.5, duration: 0.5 },
+                      y: {
+                        delay: 1.3,
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      },
+                    }}
+                    whileHover={{
+                      rotate: 12,
+                      scale: 1.1,
+                      y: -12,
+                    }}
+                    className="group relative cursor-pointer"
+                  >
+                    {/* Glow effect */}
+                    {/*<div className="absolute inset-0 bg-gradient-to-bl from-pink-400 to-rose-500 rounded-2xl blur-lg opacity-40 group-hover:opacity-60 transition-opacity" />*/}
+
+                    {/* Badge with strikethrough effect */}
+                    <div className="relative flex items-center gap-2 px-5 py-3 bg-gradient-to-bl from-pink-100 via-rose-50 to-pink-50 border-2 border-pink-400 rounded-2xl shadow-xl">
+                      <motion.div
+                        animate={{
+                          rotate: [0, -15, 15, 0],
+                          scale: [1, 1.2, 1],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                          delay: 0.7,
+                        }}
+                      >
+                        <X
+                          className="w-5 h-5 text-rose-600 font-bold"
+                          strokeWidth={3}
+                        />
+                      </motion.div>
+                      <span className="text-sm font-bold text-rose-700 relative">
+                        <span className="">Phone</span>
+                        <motion.div
+                          animate={{ scaleX: [0, 1] }}
+                          transition={{ delay: 0.9, duration: 0.4 }}
+                          className="absolute inset-0 bg-rose-500/20 rounded"
+                        />
+                      </span>
+                      {/* Small sparkle */}
+                      <motion.span
+                        animate={{
+                          scale: [0, 1, 0],
+                          rotate: [0, -180, -360],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          delay: 1,
+                        }}
+                        className="absolute -top-2 -left-2 text-pink-400"
+                      >
+                        ✨
+                      </motion.span>
+                    </div>
+                  </motion.div>
+
+                  {/* Decorative connecting line */}
+                  <motion.div
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ delay: 1, duration: 0.6 }}
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-0.5 bg-gradient-to-r from-rose-300 via-pink-300 to-rose-300 rounded-full opacity-30"
+                  />
+                </motion.div>
 
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -368,7 +542,7 @@ export default function LiveForm({ onSuccess }: LiveFormProps) {
                   transition={{ delay: 0.2 }}
                   className="text-3xl font-extrabold text-neutral-800 mb-3"
                 >
-                  Great, {name}! 📸
+                  Thank You, {name}!
                 </motion.h2>
 
                 <motion.p
@@ -377,7 +551,7 @@ export default function LiveForm({ onSuccess }: LiveFormProps) {
                   transition={{ delay: 0.3 }}
                   className="text-lg text-neutral-600 mb-8"
                 >
-                  Now take your photo{" "}
+                  Now take your selfie
                   <span className="text-rose-500 font-semibold">*</span>
                 </motion.p>
 
@@ -385,27 +559,28 @@ export default function LiveForm({ onSuccess }: LiveFormProps) {
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.38, type: "spring", stiffness: 200 }}
-                  className="relative group mb-6"
+                  className="relative group mb-6 flex flex-col justify-center items-center"
                 >
                   <button
                     onClick={() => setShowCamera(true)}
                     className="w-40 h-40 rounded-full overflow-hidden bg-gradient-to-br from-rose-100 to-rose-200 flex items-center justify-center relative shadow-2xl group-hover:shadow-rose-500/50 transition-all"
                   >
                     {preview ? (
-                      <img
+                      <Image
                         src={preview}
                         alt="preview"
+                        width={100}
+                        height={100}
                         className="w-full h-full object-cover"
                       />
                     ) : (
                       <div className="text-6xl font-extrabold text-rose-500">
                         {name.charAt(0).toUpperCase()}
+                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <Camera className="w-12 h-12 text-white" />
+                        </div>
                       </div>
                     )}
-
-                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <Camera className="w-12 h-12 text-white" />
-                    </div>
                   </button>
 
                   {/* small controls */}
@@ -479,17 +654,33 @@ export default function LiveForm({ onSuccess }: LiveFormProps) {
                   transition={{ delay: 0.18 }}
                   className="text-3xl font-extrabold text-neutral-800 mb-3"
                 >
-                  One last thing! 🎯
+                  You&apos;re amazing — just one last favour. Your voice truly
+                  matters! ❤️
                 </motion.h2>
 
-                <motion.p
+                <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.28 }}
-                  className="text-xl text-neutral-700 mb-12 font-medium"
+                  className="flex justify-center items-center text-center gap-2 mb-12"
                 >
-                  Do you want to see us?
-                </motion.p>
+                  <motion.p
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.28 }}
+                    className="text-xl text-neutral-700 font-medium"
+                  >
+                    Do you want to see us at
+                  </motion.p>
+                  <motion.p
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.28 }}
+                    className="text-2xl text-rose-600 font-bold"
+                  >
+                    FMC 25 ?
+                  </motion.p>
+                </motion.div>
 
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -504,13 +695,13 @@ export default function LiveForm({ onSuccess }: LiveFormProps) {
                       setWantsToSee(true);
                       setPendingChoice(null);
                     }}
-                    className={`w-32 h-32 rounded-3xl font-bold text-2xl shadow-xl transition-all ${
+                    className={`w-36 h-36 p-2 rounded-3xl font-bold text-2xl shadow-xl transition-all ${
                       wantsToSee === true
                         ? "bg-gradient-to-br from-rose-500 to-rose-600 text-white scale-105 shadow-rose-500/50"
                         : "bg-white text-neutral-700 hover:bg-neutral-50"
                     }`}
                   >
-                    Yes 😊
+                    Yes, Inspire FMC 25 ✨
                   </motion.button>
 
                   <motion.button
@@ -520,13 +711,13 @@ export default function LiveForm({ onSuccess }: LiveFormProps) {
                       setPendingChoice("no");
                       setShowReconsider(true);
                     }}
-                    className={`w-32 h-32 rounded-3xl font-bold text-2xl shadow-xl transition-all ${
+                    className={`w-36 h-36 p-2 rounded-3xl font-bold text-2xl shadow-xl transition-all ${
                       wantsToSee === false
                         ? "bg-gradient-to-br from-neutral-500 to-neutral-600 text-white scale-105 shadow-neutral-500/50"
                         : "bg-white text-neutral-700 hover:bg-neutral-50"
                     }`}
                   >
-                    No 🙏
+                    Not this time 🙏
                   </motion.button>
                 </motion.div>
 
@@ -536,9 +727,15 @@ export default function LiveForm({ onSuccess }: LiveFormProps) {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.45 }}
                 >
-                  <p className="text-sm text-neutral-600 mb-6 tracking-wide">
-                    Please checkout our YouTube channel for more!
-                  </p>
+                  <motion.p
+                    className="text-sm text-rose-600 mb-6 tracking-wide"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.28 }}
+                  >
+                    Before you go — watch our 100-episode web series Salahkar
+                    Didi on YouTube. Your subscription means a lot to us. 💛
+                  </motion.p>
 
                   <motion.a
                     href="https://www.youtube.com/channel/UCDWIEfGiGn7AwS1iowyMzig"
@@ -652,29 +849,31 @@ export default function LiveForm({ onSuccess }: LiveFormProps) {
 
                         <p className="text-neutral-600 mb-6">
                           You chose <span className="font-semibold">No</span>.
-                          Would you like to reconsider?
+                          If you skip now, we might miss one precious vote that
+                          truly matters. Want to give it to Badi Bahen? 🌟
                         </p>
 
                         <div className="flex justify-center gap-3">
+                          <button
+                            onClick={() => {
+                              setWantsToSee(true);
+                              setShowReconsider(false);
+                              setPendingChoice(null);
+                            }}
+                            className="px-4 py-2 rounded-xl bg-rose-600 text-white font-semibold hover:bg-neutral-800 transition"
+                          >
+                            👉 Okay, count me in!
+                          </button>
+
                           <button
                             onClick={() => {
                               setWantsToSee(false);
                               setShowReconsider(false);
                               setPendingChoice(null);
                             }}
-                            className="px-4 py-2 rounded-xl bg-neutral-700 text-white font-semibold hover:bg-neutral-800 transition"
-                          >
-                            Yes, I&apos;m sure
-                          </button>
-
-                          <button
-                            onClick={() => {
-                              setShowReconsider(false);
-                              setPendingChoice(null);
-                            }}
                             className="px-4 py-2 rounded-xl bg-white border border-neutral-300 text-neutral-700 font-semibold hover:bg-neutral-50 transition"
                           >
-                            Wait… go back
+                            No, I want to continue
                           </button>
                         </div>
                       </motion.div>
