@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { ref, onValue } from "firebase/database";
 import { db } from "@/lib/firebase";
-import { motion, useSpring } from "framer-motion";
 import NumberFlow from "@number-flow/react";
+import { onValue, ref } from "firebase/database";
+import { motion, useSpring } from "framer-motion";
+import { useEffect, useState } from "react";
 
 export default function ResultPage() {
   const [yesCount, setYesCount] = useState<number>(0);

@@ -20,7 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <title>Polls | BadiBahen</title>
+        <title>Polls | Badi Bahen</title>
         <link
           rel="apple-touch-icon"
           sizes="180x180"

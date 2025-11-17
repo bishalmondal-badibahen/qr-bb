@@ -681,63 +681,6 @@ export default function LiveForm({ onSuccess }: LiveFormProps) {
                     </motion.div>
                   )}
                 </AnimatePresence>
-
-                {/* Analyzing / Uploading overlay (animated) */}
-                <AnimatePresence>
-                  {analyzing && (
-                    <motion.div
-                      key="analyzing-overlay"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="fixed inset-0 z-[1000] flex items-center justify-center"
-                    >
-                      <motion.div
-                        initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: 20, opacity: 0 }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 200,
-                          damping: 20,
-                        }}
-                        className="w-[92%] max-w-md bg-white/95 backdrop-blur-md rounded-2xl p-6 shadow-2xl flex flex-col items-center text-center"
-                      >
-                        <div className="mb-4">
-                          <Loader2 className="w-12 h-12 animate-spin text-rose-500" />
-                        </div>
-                        <h4 className="text-lg font-bold mb-2">
-                          Analyzing image…
-                        </h4>
-                        <p className="text-sm text-neutral-600 mb-4">
-                          We analyze your photo for safety. This runs only at
-                          submit.
-                        </p>
-
-                        {uploadProgress !== null ? (
-                          <div className="w-full">
-                            <div className="h-2 bg-neutral-200 rounded-full overflow-hidden">
-                              <div
-                                style={{ width: `${uploadProgress}%` }}
-                                className="h-2 bg-rose-500 transition-all"
-                              />
-                            </div>
-                            <div className="text-xs text-neutral-500 mt-2">
-                              Uploading: {uploadProgress}%
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-3">
-                            <ShieldCheck className="w-5 h-5 text-rose-500" />
-                            <div className="text-sm text-neutral-600">
-                              Scanning for adult content…
-                            </div>
-                          </div>
-                        )}
-                      </motion.div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </motion.div>
             )}
           </AnimatePresence>

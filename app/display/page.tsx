@@ -118,10 +118,6 @@ export default function DisplayPage() {
       setColumns(adjustedColumns);
       setGap(baseGap);
       setCardScale(scale);
-
-      console.log(
-        `Display settings: ${itemCount} items → ${adjustedColumns} columns (base: ${baseColumns}, scale: ${scale})`,
-      );
     };
 
     updateResponsiveSettings();
