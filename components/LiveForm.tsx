@@ -542,7 +542,15 @@ export default function LiveForm({ onSuccess }: LiveFormProps) {
                   transition={{ delay: 0.2 }}
                   className="text-3xl font-extrabold text-neutral-800 mb-3"
                 >
-                  Thank You, {name}!
+                  Thank You
+                </motion.h2>
+                <motion.h2
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-3xl font-extrabold text-rose-600 mb-3"
+                >
+                  {name}
                 </motion.h2>
 
                 <motion.p
