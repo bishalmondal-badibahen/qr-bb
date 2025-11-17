@@ -29,7 +29,7 @@ export const compressImage = (file: File): Promise<File> => {
  */
 export const uploadToS3 = async (file: File): Promise<string> => {
   try {
-    console.log("📤 Starting S3 upload for file:", file.name, file.type);
+    // console.log("📤 Starting S3 upload for file:", file.name, file.type);
 
     // 1. Ask server for presigned URL
     const res = await fetch("/api/s3/presign", {
@@ -40,11 +40,11 @@ export const uploadToS3 = async (file: File): Promise<string> => {
       body: JSON.stringify({ fileType: file.type }),
     });
 
-    console.log("📡 Presign response status:", res.status);
+    // console.log("📡 Presign response status:", res.status);
 
     if (!res.ok) {
       const errorText = await res.text();
-      console.error("❌ Presign request failed:", res.status, errorText);
+      // console.error("❌ Presign request failed:", res.status, errorText);
       throw new Error(
         `Failed to get presigned URL: ${res.status} - ${errorText}`,
       );
@@ -53,13 +53,13 @@ export const uploadToS3 = async (file: File): Promise<string> => {
     // Check if response has content
     const contentType = res.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
-      console.error("❌ Invalid response content-type:", contentType);
+      // console.error("❌ Invalid response content-type:", contentType);
       throw new Error("Invalid response from presign endpoint");
     }
 
     const responseText = await res.text();
     if (!responseText) {
-      console.error("❌ Empty response from presign endpoint");
+      // console.error("❌ Empty response from presign endpoint");
       throw new Error("Empty response from presign endpoint");
     }
 
@@ -67,7 +67,7 @@ export const uploadToS3 = async (file: File): Promise<string> => {
     try {
       presignData = JSON.parse(responseText);
     } catch (parseError: unknown) {
-      console.error("❌ Failed to parse JSON:", responseText);
+      // console.error("❌ Failed to parse JSON:", responseText);
       if (parseError instanceof Error)
         throw new Error(
           `Invalid JSON response from presign endpoint: ${parseError.message}`,
@@ -78,13 +78,13 @@ export const uploadToS3 = async (file: File): Promise<string> => {
     const { uploadUrl, fields, fileUrl } = presignData;
 
     if (!uploadUrl || !fields || !fileUrl) {
-      console.error("❌ Incomplete presign data:", presignData);
+      // console.error("❌ Incomplete presign data:", presignData);
       throw new Error(
         "Incomplete presign data: missing uploadUrl, fields, or fileUrl",
       );
     }
 
-    console.log("✅ Presigned URL received, uploading to S3...");
+    // console.log("✅ Presigned URL received, uploading to S3...");
 
     // 2. Upload directly to S3
     const form = new FormData();
@@ -98,11 +98,11 @@ export const uploadToS3 = async (file: File): Promise<string> => {
 
     if (!uploadRes.ok) {
       const uploadError = await uploadRes.text();
-      console.error("❌ S3 upload failed:", uploadRes.status, uploadError);
+      // console.error("❌ S3 upload failed:", uploadRes.status, uploadError);
       throw new Error(`S3 upload failed: ${uploadRes.status}`);
     }
 
-    console.log("✅ File uploaded successfully to S3:", fileUrl);
+    // console.log("✅ File uploaded successfully to S3:", fileUrl);
 
     // Return final accessible S3 URL
     return fileUrl;
@@ -120,12 +120,12 @@ export const uploadToS3 = async (file: File): Promise<string> => {
 export const compressAndUploadImage = async (file: File): Promise<string> => {
   const compressedFile = await compressImage(file);
 
-  console.log("Original:", (file.size / 1024 / 1024).toFixed(2), "MB");
-  console.log(
-    "Compressed:",
-    (compressedFile.size / 1024 / 1024).toFixed(2),
-    "MB",
-  );
+  // console.log("Original:", (file.size / 1024 / 1024).toFixed(2), "MB");
+  // console.log(
+  //   "Compressed:",
+  //   (compressedFile.size / 1024 / 1024).toFixed(2),
+  //   "MB",
+  // );
 
   const fileUrl = await uploadToS3(compressedFile);
 

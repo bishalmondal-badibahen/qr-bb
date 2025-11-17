@@ -12,10 +12,10 @@ export async function loadNSFWModel(): Promise<nsfwjs.NSFWJS> {
   try {
     // Load the model (uses CDN, no download needed)
     model = await nsfwjs.load();
-    console.log("NSFW model loaded successfully");
+    // console.log("NSFW model loaded successfully");
     return model;
   } catch (error) {
-    console.error("Error loading NSFW model:", error);
+    // console.error("Error loading NSFW model:", error);
     throw error;
   }
 }
@@ -26,7 +26,7 @@ export async function loadNSFWModel(): Promise<nsfwjs.NSFWJS> {
  * @returns Object with classification results and isSafe flag
  */
 export async function checkImageSafety(
-  imageElement: HTMLImageElement | HTMLVideoElement
+  imageElement: HTMLImageElement | HTMLVideoElement,
 ): Promise<{
   isSafe: boolean;
   predictions: Array<{ className: string; probability: number }>;
@@ -43,14 +43,17 @@ export async function checkImageSafety(
     // Classes: Porn, Sexy, Hentai, Neutral, Drawing
 
     // Find probabilities for unsafe categories
-    const pornProb = predictions.find(p => p.className === "Porn")?.probability || 0;
-    const sexyProb = predictions.find(p => p.className === "Sexy")?.probability || 0;
-    const hentaiProb = predictions.find(p => p.className === "Hentai")?.probability || 0;
+    const pornProb =
+      predictions.find((p) => p.className === "Porn")?.probability || 0;
+    const sexyProb =
+      predictions.find((p) => p.className === "Sexy")?.probability || 0;
+    const hentaiProb =
+      predictions.find((p) => p.className === "Hentai")?.probability || 0;
 
     // Define thresholds (adjustable based on your needs)
-    const PORN_THRESHOLD = 0.3;    // 30% confidence for porn
-    const SEXY_THRESHOLD = 0.5;     // 50% confidence for sexy
-    const HENTAI_THRESHOLD = 0.3;   // 30% confidence for hentai
+    const PORN_THRESHOLD = 0.3; // 30% confidence for porn
+    const SEXY_THRESHOLD = 0.5; // 50% confidence for sexy
+    const HENTAI_THRESHOLD = 0.3; // 30% confidence for hentai
 
     // Check if image is unsafe
     const isPorn = pornProb > PORN_THRESHOLD;
@@ -62,18 +65,21 @@ export async function checkImageSafety(
     let message = "";
     if (!isSafe) {
       if (isPorn) {
-        message = "Explicit adult content detected. Please upload an appropriate image.";
+        message =
+          "Explicit adult content detected. Please upload an appropriate image.";
       } else if (isHentai) {
-        message = "Inappropriate content detected. Please upload an appropriate image.";
+        message =
+          "Inappropriate content detected. Please upload an appropriate image.";
       } else if (isSexy) {
-        message = "Suggestive content detected. Please upload a more appropriate image.";
+        message =
+          "Suggestive content detected. Please upload a more appropriate image.";
       }
     } else {
       message = "Image is safe to upload.";
     }
 
-    console.log("NSFW Detection Results:", predictions);
-    console.log(`Image is ${isSafe ? "SAFE" : "UNSAFE"}: ${message}`);
+    // console.log("NSFW Detection Results:", predictions);
+    // console.log(`Image is ${isSafe ? "SAFE" : "UNSAFE"}: ${message}`);
 
     return {
       isSafe,
@@ -81,7 +87,7 @@ export async function checkImageSafety(
       message,
     };
   } catch (error) {
-    console.error("Error checking image safety:", error);
+    // console.error("Error checking image safety:", error);
     // In case of error, return safe (fail open) or you can fail closed
     return {
       isSafe: true, // Change to false if you want to reject on error
