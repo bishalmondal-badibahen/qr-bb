@@ -678,6 +678,7 @@ export default function LiveForm({ onSuccess }: LiveFormProps) {
                     whileTap={{ scale: 0.96 }}
                     onClick={() => {
                       setIsAllowed(true);
+                      handleSubmit();
                     }}
                     className="
                       relative flex items-center gap-2 px-6 py-3
