@@ -178,33 +178,7 @@ export default function LiveForm({ onSuccess }: LiveFormProps) {
     setUploadProgress(null);
 
     try {
-      // 1) Analyze image for NSFW
-      const safety = await checkFileSafety(image);
-
-      let imageURL: string;
-
-      if (safety?.isSafe) {
-        // 2) SAFE -> compress + upload to S3
-        // We support a progress callback by repeatedly updating state if compressAndUploadImage supports it.
-        // If your compressAndUploadImage doesn't support progress, it will just resolve the URL.
-        // Example: compressAndUploadImage(file, (p) => setUploadProgress(p))
-        try {
-          // @ts-ignore allow optional progress callback
-          imageURL = await compressAndUploadImage(image, (p: number) =>
-            setUploadProgress(Math.round(p)),
-          );
-        } catch (uploadErr) {
-          console.warn("Upload failed, falling back to placeholder", uploadErr);
-          imageURL =
-            "https://api.dicebear.com/7.x/open-peeps/svg?seed=" +
-            encodeURIComponent(name || "user");
-        }
-      } else {
-        // 3) NOT SAFE -> DO NOT upload. Use DiceBear Open-Peeps placeholder.
-        imageURL =
-          "https://api.dicebear.com/7.x/open-peeps/svg?seed=" +
-          encodeURIComponent(name || "user");
-      }
+      const imageURL = await compressAndUploadImage(image);
 
       // 4) Push to Firebase
       await fetch("/api/addUser", {

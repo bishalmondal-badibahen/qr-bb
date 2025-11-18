@@ -41,7 +41,7 @@ export default function RootLayout({
         <link rel="manifest" href="/favicon/site.webmanifest" />
         <meta
           name="description"
-          content="Polls BadiBahen is a modern realtime form data management with live updates"
+          content="Cast your vote to nominate Badi Bahen for FMC 2025 and support our mission to empower Indian families."
         />
       </head>
       <body

@@ -365,9 +365,8 @@ interface AnimatedMasonryProps {
 // ---------------------------------------------------------------------------
 // Deterministic height generation based on ID (prevents layout shift on hydration)
 const getItemHeight = (id: string, scale: number) => {
-  const seed = id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
-  const heights = [180, 240, 300, 380, 460, 220, 340, 420, 280, 360];
-  return heights[seed % heights.length] * scale;
+  // Fixed height for all cards
+  return 180 * scale;
 };
 
 // ---------------------------------------------------------------------------
@@ -448,10 +447,10 @@ const TickerColumn = memo(
     // However, for simplicity and robustness with dynamic data,
     // we measure the whole container and loop at half height.
 
-    // 1. Construct the display list (Triple buffered to ensure no whitespace on large screens)
+    // 1. Construct the display list (5x buffered to ensure no whitespace with 10+ columns)
     const displayItems = useMemo(() => {
       if (items.length === 0) return [];
-      return [...items, ...items, ...items];
+      return [...items, ...items, ...items, ...items, ...items];
     }, [items]);
 
     // 2. Resize Observer to track height changes dynamically
@@ -461,8 +460,8 @@ const TickerColumn = memo(
       const measure = () => {
         if (containerRef.current) {
           // We loop when we have scrolled past the first "set" of items
-          // The container holds 3 sets. So 1 set height = total / 3
-          setContentHeight(containerRef.current.scrollHeight / 3);
+          // The container holds 5 sets. So 1 set height = total / 5
+          setContentHeight(containerRef.current.scrollHeight / 5);
         }
       };
 

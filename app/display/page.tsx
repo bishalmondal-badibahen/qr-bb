@@ -35,29 +35,29 @@ export default function DisplayPage() {
 
       if (width >= 3840) {
         // 4K displays
-        baseColumns = 8;
+        baseColumns = 12;
         baseGap = 24;
-        maxColumns = 12;
+        maxColumns = 18;
       } else if (width >= 2560) {
         // 2K displays
-        baseColumns = 7;
+        baseColumns = 11;
         baseGap = 22;
-        maxColumns = 10;
+        maxColumns = 15;
       } else if (width >= 1920) {
         // Large desktop
-        baseColumns = 6;
+        baseColumns = 10;
         baseGap = 20;
-        maxColumns = 8;
-      } else if (width >= 1536) {
-        // Desktop XL
-        baseColumns = 5;
+        maxColumns = 13;
+      } else if (width >= 1440) {
+        // Desktop XL (>= 1440px)
+        baseColumns = 10;
         baseGap = 18;
-        maxColumns = 7;
+        maxColumns = 12;
       } else if (width >= 1280) {
         // Desktop
-        baseColumns = 4;
+        baseColumns = 6;
         baseGap = 16;
-        maxColumns = 6;
+        maxColumns = 8;
       } else if (width >= 1024) {
         // Laptop
         baseColumns = 3;
