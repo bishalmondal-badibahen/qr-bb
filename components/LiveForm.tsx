@@ -359,21 +359,6 @@ export default function LiveForm({ onSuccess }: LiveFormProps) {
                           className="absolute inset-0 bg-rose-500/20 rounded"
                         />
                       </span>
-                      {/* Small sparkle */}
-                      <motion.span
-                        animate={{
-                          scale: [0, 1, 0],
-                          rotate: [0, 180, 360],
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          delay: 0.5,
-                        }}
-                        className="absolute -top-2 -right-2 text-rose-400"
-                      >
-                        ✨
-                      </motion.span>
                     </div>
                   </motion.div>
 
@@ -404,9 +389,6 @@ export default function LiveForm({ onSuccess }: LiveFormProps) {
                     }}
                     className="group relative cursor-pointer"
                   >
-                    {/* Glow effect */}
-                    {/*<div className="absolute inset-0 bg-gradient-to-bl from-pink-400 to-rose-500 rounded-2xl blur-lg opacity-40 group-hover:opacity-60 transition-opacity" />*/}
-
                     {/* Badge with strikethrough effect */}
                     <div className="relative flex items-center gap-2 px-5 py-3 bg-gradient-to-bl from-pink-100 via-rose-50 to-pink-50 border-2 border-pink-400 rounded-2xl shadow-xl">
                       <motion.div
@@ -434,31 +416,8 @@ export default function LiveForm({ onSuccess }: LiveFormProps) {
                           className="absolute inset-0 bg-rose-500/20 rounded"
                         />
                       </span>
-                      {/* Small sparkle */}
-                      <motion.span
-                        animate={{
-                          scale: [0, 1, 0],
-                          rotate: [0, -180, -360],
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          delay: 1,
-                        }}
-                        className="absolute -top-2 -left-2 text-pink-400"
-                      >
-                        ✨
-                      </motion.span>
                     </div>
                   </motion.div>
-
-                  {/* Decorative connecting line */}
-                  <motion.div
-                    initial={{ scaleX: 0 }}
-                    animate={{ scaleX: 1 }}
-                    transition={{ delay: 1, duration: 0.6 }}
-                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-0.5 bg-gradient-to-r from-rose-300 via-pink-300 to-rose-300 rounded-full opacity-30"
-                  />
                 </motion.div>
 
                 <motion.div
@@ -567,14 +526,6 @@ export default function LiveForm({ onSuccess }: LiveFormProps) {
 
                   {/* small controls */}
                   <div className="mt-4 flex items-center gap-3 justify-center">
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="px-4 py-2 rounded-full bg-white text-neutral-700 border border-neutral-200 shadow-sm hover:bg-neutral-50 transition"
-                    >
-                      <ImageIcon className="inline w-4 h-4 mr-2" />
-                      Upload
-                    </button>
-
                     {preview && (
                       <button
                         onClick={removeImage}
